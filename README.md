@@ -35,7 +35,7 @@ Our Matlab version and computation environment are listed as below
 
 # File Overview
 
-All Matlab code files and plots are stored at two folders: *Matlab Code* and *Visualization*. They contain matlab code scripts and associated plots respectively. Under the folder *Matlab Code*, we have
+All Matlab code files and plots are stored at two folders: "**Matlab Code**" and "**Visualization**". They contain matlab code scripts and associated plots respectively. Under the folder "**Matlab Code**", we have
 
 - The file `github_numerical_simulation` is for simulation code for the case when the response variable is continuous.
 
