@@ -43,13 +43,27 @@ All Matlab code files and plots are stored at two folders: "**Matlab Code**" and
 
 - And `github_BJ.m` and `github_BJ_plots.m` are for the case when we use Beijing housing price as the application of our proposed method. Specifically, the relation between Matlab code and plots are listed as below
 
-The script `github_numerical_simulation` generates: `TRI-BIC.jpg`, `TRI-DEN.jpg`, `TRI-SPARSE.jpg`, `TRI-UNIF.jpg`, `Fig - Estimated Zero Regions of Continuous Simulation`, `Fig - MCR of Continuous Simulation`.
+The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jpg`, `TRI-SPARSE.jpg`, `TRI-UNIF.jpg`, `Fig - Estimated Zero Regions of Continuous Simulation.jpg`, `Fig - MCR of Continuous Simulation.jpg`.
 
 # Running Time
 
 ## Numerical Simulation
 
 For continuous response simulation
+
+- we have 4 sample sizes: 500, 1000, 2000, 5000
+
+- 100 loops to calculate Pe and ISE: **200** seconds in total for 4 sample sizes
+
+- calculate estimated zero regions: **211** seconds in total for 4 sample sizes
+
+- MCR running Time
+    1. n=500: **1277** seconds
+    2. n=1000: **1473** seconds
+    3. n=2000: **2052** seconds
+    4. n=5000: **9016** seconds
+
+- Performance comparison for different Triangulations when n=2000: **193** seconds in total for 4 different types of Triangulations
 
 ## Beijing Housing Price Application
 
@@ -87,6 +101,6 @@ Besides main Matlab scripts that are mentioned above, you also need other helper
 
 - `CZ_SPL_est.m`: created by Chengzhu Zhang, which takes a list of location (X, Y) and Triangulation information as input. The output contains two parts. The first output is values of associated Bernstein basis polynomials of degree d, while the second output is the list of order numbers indicating valid points that fall into the Triangulation. More details can be found in the comments contained in the file.
 
-- `update_p_b_hat_2.m`: created by Chengzhu Zhang, which takes unpenalized estimator "b_hat", design matrix "mat_Z", response "Z" and Triangulation related values as input, to calculate SCAD penalized estimator "p_b_hat". This function is used for continuous response variable.
+- `update_p_b_hat_2.m`: created by Chengzhu Zhang, which takes unpenalized estimator "`b_hat`", design matrix "`mat_Z`", response "`Z`" and Triangulation related values as input, to calculate SCAD penalized estimator "`p_b_hat`". This function is used for continuous response variable.
 
-- `update_p_b_hat_poisson.m`: created by Chengzhu Zhang, which takes unpenalized estimator "b_hat", design matrix "mat_Z", response "Z" and Triangulation related values as input, to calculate SCAD penalized estimator "p_b_hat". This function is used for discrete response variable that follows a Poisson distribution.
+- `update_p_b_hat_poisson.m`: created by Chengzhu Zhang, which takes unpenalized estimator "`b_hat`", design matrix "`mat_Z`", response "`Z`" and Triangulation related values as input, to calculate SCAD penalized estimator "`p_b_hat`". This function is used for discrete response variable that follows a Poisson distribution.
