@@ -69,6 +69,10 @@ For continuous response simulation
 
 For practical application
 
+- 5-fold Cross-Validation: **3543** seconds in total
+
+- District-wise Linear Regression: **7** seconds in total
+
 # Dataset Access
 
 We use a Beijing housing price dataset for practical application. The raw dataset source is: https://www.kaggle.com/datasets/ruiqurm/lianjia
