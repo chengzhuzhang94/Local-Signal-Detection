@@ -47,13 +47,11 @@ The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jp
 
 # Running Time
 
-## Numerical Simulation
-
-For continuous response simulation
+## Continuous Response Simulation
 
 - we have 4 sample sizes: 500, 1000, 2000, 5000
 
-- 100 loops to calculate Pe and ISE: **200** seconds in total for 4 sample sizes
+- 100 loops to calculate $$P_e$$ and ISE: **200** seconds in total for 4 sample sizes
 
 - calculate estimated zero regions: **211** seconds in total for 4 sample sizes
 
@@ -64,6 +62,12 @@ For continuous response simulation
     4. n=5000: **9016** seconds
 
 - Performance comparison for different Triangulations when n=2000: **193** seconds in total for 4 different types of Triangulations
+
+## Poisson Distribution Response Simulation
+
+- we have 3 sample sizes: 500, 2000, 5000
+
+- 100 loops to calculate $$P_e$$ and ISE: **1472** seconds in total
 
 ## Beijing Housing Price Application
 
@@ -99,9 +103,9 @@ The main code script is `github_BJ.m` which contains fitting for cross-validatio
 
 # Helper function list
 
-Besides main Matlab scripts that are mentioned above, you also need other helper functions which serves some basis functions related to Triangulation. For example, we directly use the function provided by Larry L. Schumaker to generate triangulation. We list them and associated resources as below
+Besides main Matlab scripts that are mentioned above, you also need other helper functions which serves some basis functions related to Triangulation. For example, we directly use the function provided by Larry L. Schumaker ([His webpage](https://math.vanderbilt.edu/schumake/)) to generate triangulation. We list them and associated resources as below
 
-- basic helper functions from Larry L. Schumaker: `basis.p`, `choose.p`, `getindex.p`, `trilists.p`, `dcircle.m`, `ddiff.m`, `distmesh2d.m`, `drectangle.m`, `fixmesh.m`
+- basic helper functions from Larry L. Schumaker: `basis.p`, `choose.p`, `getindex.p`, `trilists.p`, `dcircle.m`, `ddiff.m`, `distmesh2d.m`, `drectangle.m`, `fixmesh.m`, `getindex.p`, `huniform.m`, `simpplot.m`, `simpvol.m`, `trilists.p`
 
 - `CZ_SPL_est.m`: created by Chengzhu Zhang, which takes a list of location (X, Y) and Triangulation information as input. The output contains two parts. The first output is values of associated Bernstein basis polynomials of degree d, while the second output is the list of order numbers indicating valid points that fall into the Triangulation. More details can be found in the comments contained in the file.
 
