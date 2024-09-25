@@ -23,7 +23,7 @@ both simulation cases and real data analysis.
 
 In this Markdown file, we provide some information related to reproducibility, which mainly covers functionality of each Matlab code script and what plots they would generate.
 
-Because of the file size limit (25MB) on GitHub, we upload our real dataset (Beijing Housing Price) to Kaggle (https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia). Please check the section [**Dataset Access**](# dataset-access)
+Because of the file size limit (25MB) on GitHub, we upload our real dataset (Beijing Housing Price) to Kaggle (https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia). Please check the section [**Dataset Access**](#dataset-access)
 
 # Requirement
 
