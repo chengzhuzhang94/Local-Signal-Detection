@@ -23,6 +23,8 @@ both simulation cases and real data analysis.
 
 In this Markdown file, we provide some information related to reproducibility, which mainly covers functionality of each Matlab code script and what plots they would generate.
 
+Because of the file size limit (25MB) on GitHub, we upload our real dataset (Beijing Housing Price) to Kaggle (https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia). Please check the section [**Dataset Access**](# dataset-access)
+
 # Requirement
 
 Our Matlab version and computation environment are listed as below
@@ -39,9 +41,9 @@ All Matlab code files and plots are stored at two folders: "**Matlab Code**" and
 
 - The file `github_numerical_simulation` is for simulation code for the case when the response variable is continuous.
 
-- The file `github_Poisson_simulation2.m` is for the case when the response variable follows a Poisson distribution.
+- The file `github_Poisson_simulation.m` is for the case when the response variable follows a Poisson distribution.
 
-- And `github_BJ.m` and `github_BJ_plots.m` are for the case when we use Beijing housing price as the application of our proposed method. Specifically, the relation between Matlab code and plots are listed as below
+- And `github_BJ_ver_2.m` is for the case when we use Beijing housing price as the application of our proposed method. Specifically, the relation between Matlab code and plots are listed as below
 
 The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jpg`, `TRI-SPARSE.jpg`, `TRI-UNIF.jpg`, `Fig - Estimated Zero Regions of Continuous Simulation.jpg`, `Fig - MCR of Continuous Simulation.jpg`.
 
@@ -73,7 +75,7 @@ The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jp
 
 For practical application
 
-- 5-fold Cross-Validation: **3543** seconds in total
+- 5-fold Cross-Validation: **6534** seconds in total
 
 - District-wise Linear Regression: **7** seconds in total
 
@@ -83,11 +85,13 @@ We use a Beijing housing price dataset for practical application. The raw datase
 
 However, we made some changes on the raw dataset, which mainly is about adding interaction of variables and implement standardization. Because github has a limit of file size, so we upload dataset files to a public Kaggle dataset address: https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia
 
-There are two CSV files in the before-mentioned Kaggle dataset address, which need to be downloaded to current working directory as sourcing datasets. Specifically, they are
+There are three CSV files in the before-mentioned Kaggle dataset address, which need to be downloaded to current working directory as sourcing datasets. Specifically, they are
 
 * `new BJ house.csv`: this CSV file is the raw source dataset I got from Kaggle dataset. This dataset contains 293,963 data points and 28 columns. In the Matlab code, only column 3 (long) and column 4 (lat) are necessary. The location information is used to determine whether the house falls into the manual crafted triangulation. Only valid data points are kept for down-streaming fitting. The detailed list of column names is contained in the second line of the Matlab script `github_BJ.m`.
 
-* `new BJ stepAIC design matrix std.csv`: this CSV file is transformed from `new BJ house.csv`, which contains all variables including raw variables and interaction of raw variables. They are picked via AIC and stepwise selection method from the entire set consists of all main effects and interactions of all covariates. This step is implemented in R studio (but not added to the current folder). You can check the first row of this CSV file to know what it represents. The first column is called “intercept” and would always be 1. This dataset is already standardized.
+* `new BJ stepAIC design matrix.csv`: this CSV file is transformed from `new BJ house.csv`, which contains all variables including raw variables and interaction of raw variables. They are picked via AIC and stepwise selection method from the entire set consists of all main effects and interactions of all covariates. This step is implemented in R studio (but not added to the current folder). You can check the first row of this CSV file to know what it represents. The first column is called “intercept” and would always be 1.
+
+* `new BJ stepAIC design matrix std.csv`: this CSV file is transformed from `new BJ house.csv`, which contains all variables including raw variables and interaction of raw variables. The raw dataset is standardized first, then we calculate the design matrix of the standardized dataset and store it.
 
 ## Continuous Response Simulation
 
@@ -95,11 +99,11 @@ The main code script is `github_numerical_simulation.m` which can be found in th
 
 ## Poisson Response Simulation
 
-The main code script is `github_Poisson_simulation2.m` which can be found in the subfolder "Matlab Code".
+The main code script is `github_Poisson_simulation.m` which can be found in the subfolder "Matlab Code".
 
 ## Beijing Housing Price Application
 
-The main code script is `github_BJ.m` which contains fitting for cross-validation part. The scatterplot and summary table of 5-fold cross-validation are generated in this script. Furthermore, we included another file `github_BJ_explore.m` which contains the early stage exploration we made about the Beijing housing price dataset. It includes exploration of the raw dataset and the fitting results from standardized dataset and district-specific linear regression.
+The main code script is `github_BJ_ver_2.m` which contains fitting for cross-validation part. The scatterplot and summary table of 5-fold cross-validation are generated in this script. Furthermore, we included another file `github_BJ_explore.m` which contains the early stage exploration we made about the Beijing housing price dataset. It includes exploration of the raw dataset and the fitting results from standardized dataset and district-specific linear regression.
 
 # Helper function list
 
