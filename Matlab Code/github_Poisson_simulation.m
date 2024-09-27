@@ -25,74 +25,6 @@ record_table_ise_scad = zeros(kLoopTime, 1*12);
 record_table_pe = zeros(kLoopTime, 1*12);  
 diag_lamb_vec = zeros(kLoopTime, 1); 
 
-%% Triangulation 1: optimized via BIC: h=0.16
-rng(1); % set seed
-
-% generate TRI, the third argument of distmensh2d() is 0.16
-[p,TRI] = distmesh2d(fd,fh,0.16,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-[nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-    vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
-[grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-
-tic;
-rng(111);
-for i=1:kLoopTime
-    %% Generate points first
-    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); 
-    while(temp_no <= n) 
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
-        temp_theta = 2*pi*rand(1);
-        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-        end
-    end
-    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-    X_1 = unifrnd(0, 1, [n, 1]); X_2 = unifrnd(0, 1, [n, 1]); X_3 = unifrnd(0, 1, [n, 1]);
-    Z = X_1.*beta_1 + X_2.*beta_2+X_3.*beta_3;
-    Z = poissrnd(Z); ori_Z = Z;
-    
-    Z_1 = X_1.*beta_1; Z_2 = X_2.*beta_2; Z_3 = X_3.*beta_3;
-    [B, valid_id] = CZ_SPL_est(X,Y,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-   
-    mat_Z = zeros(n, m*nc);
-    for k = 1:n
-        temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-        mat_Z(k,:) = [temp1, temp2, temp3];
-    end
-    full_mat_Z = mat_Z; full_Z = Z;
-    mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-    [b_hat dev stats] = glmfit(mat_Z, Z, 'poisson', 'constant', 'off'); % Default iteration times is 100
-    n = length(valid_id);
-       
-    nlam = 40; a = 3.7;threshold = 10 ^ (-3); 
-    lam_vec = linspace(0.01, 0.4, nlam);
-    bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
-    for q = 1:nlam
-        [p_b_hat, dist_logical] = update_p_b_hat_poisson(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));      
-        converged_or_not(q) = dist_logical;
-        exp_preds = mat_Z * p_b_hat;
-        bic(q) = -2*sum(Z .* exp_preds) + 2*sum(exp(exp_preds)) + log(length(exp_preds)) * sum(p_b_hat ~= 0);
-    end
-
-    [temp_min, temp_index] = min(bic);
-    [p_b_hat, dist_logical] = update_p_b_hat_poisson(mat_Z, Z, b_hat, threshold, lam_vec(temp_index), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));      
-
-    color_p_beta = ones(length(p_b_hat), 1); color_p_beta(p_b_hat == 0) = 0;
-    
-    % f1 P_e part
-    record_table_pe(i, 1) = sum(grid_B(grid_valid_id,:) * p_b_hat(1:nc) == 0) / length(grid_valid_id);
-    grid_f2_zeroidx_pred = find(grid_B(grid_valid_id,:) * p_b_hat(1+nc:2*nc) == 0);
-    record_table_pe(i, 2) = (length(intersect(grid_f2_zeroidx, grid_valid_id)) + length(grid_f2_zeroidx_pred) - 2*length(intersect(grid_f2_zeroidx, grid_f2_zeroidx_pred))) / length(grid_valid_id);
-    grid_f3_zeroidx_pred = find(grid_B(grid_valid_id,:) * p_b_hat(1+2*nc:3*nc) == 0);
-    record_table_pe(i, 3) = (length(intersect(grid_f3_zeroidx, grid_valid_id)) + length(grid_f3_zeroidx_pred) - 2*length(intersect(grid_f3_zeroidx, grid_f3_zeroidx_pred))) / length(grid_valid_id); % P_e part is done
-    
-end
-toc;
-
-triplot(TRI, vx, vy)
-
 %% Calcualte the Best h values for each sample size: n
 h_opt = 0.13:0.01:0.23;
 for j = 1:length(h_opt)
@@ -132,7 +64,6 @@ for i=1:length(n_choice)
     Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3;
     
     Z = poissrnd(exp(Z)); ori_Z = Z;
-    %Z = poissrnd(Z); ori_Z = Z; % store the original response values in ori_Z
     hist(X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3);
     
     for j=1:length(h_choice)
@@ -424,7 +355,6 @@ for i=1:length(n_choice)
         beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
         X_1 = unifrnd(0, 1, [n_buffer, 1]); X_2 = unifrnd(0, 1, [n_buffer, 1]); X_3 = unifrnd(0, 1, [n_buffer, 1]);
         Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3;
-        %scatter(X, Y, 6, X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3); colorbar(); % we want sum between [-3, 3]
         
         Z = poissrnd(exp(Z)); ori_Z = Z;
         [B, valid_id] = CZ_SPL_est(X,Y,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
