@@ -1,9 +1,17 @@
+%% Guide
+
+% Part I: Triangulation
+% Part II: read in dataset
+% Part III: Cross-Validation
+% Part IV: District-wise Linear Regression
+% Part V: Visualization of Triangulation and Estimated Varying Coefficient
+
 %% Load CSV file. This one is only for visualization
 df = table2array(readtable('new BJ house.csv')); df(1,:);
 scatter(df(:,3),df(:,4),1)
 % This dataset contains 293,963 data points and 28 columns
 
-%% Use a fixed Triangulation
+%% Part I: Triangulation
 
 % This Triangulation is picked based on the border of dataset and relative
 % locations of each Beijing political districts
@@ -18,6 +26,8 @@ vy = [39.9400   39.8834   40.2400   40.1712   39.9352  39.9855  39.8850  39.9700
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt;
+
+disp("Triangulation was generated")
 
 % Data Visualization of all data points and the TRI
 hold on; scatter(df(:, 3), df(:, 4), 1); triplot(TRI, vx, vy); 
@@ -41,7 +51,9 @@ train_id = sort(randsample(length(valid_id), 225000)); test_id = setdiff(1:lengt
 train_B = B(train_id,:); test_B = B(test_id, :);
 totalPrice_log_std = (log(df(:,1))-mean(log(df(:,1))))./std(log(df(:,1)));
 
-%% Read in the standadized dataset. This one is used for fitting model
+%% Part II: read in dataset
+disp("Start to read in BJ housing price dataset...")
+% Read in the standadized dataset. This one is used for fitting model
 stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
 stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
 % generate design matrix
@@ -63,12 +75,13 @@ end
 mat_D = stepAIC_DM(train_id,:); 
 test_mat_D = stepAIC_DM(test_id,:);
 
+disp("Design Matrix was generated")
 %% Method: Linear Regression
 lm_b_hat = (transpose(mat_D) * mat_D) \ transpose(mat_D) * totalPrice_log_std(train_id); 
 b_hat = (transpose(mat_Z) * mat_Z + 1 / (log(length(train_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * totalPrice_log_std(train_id); 
 
-%% Cross-validation
-
+%% Part III: Cross-Validation
+disp("Start Cross-Validation...")
 % In this section, we implement cross-validation fitting to generate
 % summary table result
 n_total = (length(train_id)+length(test_id)); % the value is 277,410
@@ -120,9 +133,8 @@ for i=1:5
         bic(q,2) = log(mean((totalPrice_log_std(temp_train_id) - full_mat_Z(temp_train_id, :) * temp_p_b_hat).^2));
         bic(q,3) = sum(temp_p_b_hat ==0);
     end
-    bic(:, 1)
-    [temp_min, temp_index] = min(bic(:,1)); lam_vec(temp_index)
-    [temp_p_b_hat, dist_logical] = update_p_b_hat_2(full_mat_Z(temp_train_id,:), totalPrice_log_std(temp_train_id), temp_b_hat, threshold, lam_vec(temp_index), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(train_id),2,6); sum(p_b_hat ~=0)/length(p_b_hat)
+    [temp_min, temp_index] = min(bic(:,1)); lam_vec(temp_index);
+    [temp_p_b_hat, dist_logical] = update_p_b_hat_2(full_mat_Z(temp_train_id,:), totalPrice_log_std(temp_train_id), temp_b_hat, threshold, lam_vec(temp_index), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(train_id),2,6);
     
     % SCAD
     cv_records(i, 7) = mean((totalPrice_log_std(temp_train_id)-full_mat_Z(temp_train_id,:) * temp_p_b_hat).^2);
@@ -178,7 +190,9 @@ summary_T
 %     "SCAD"          "0.8518 (0.8516)"    "0.1482 (0.1480)"    "0.1505 (0.1504)"    "-1.8532 (-1.8544)"
 %     "DT"            "0.9484 (0.9483)"    "0.0516 (0.0517)"    "0.1117 (0.1115)"    "NA"   
 
-%% Plot TRI and Beijing Districts
+%% Part IV: District-wise Linear Regression
+% Plot TRI and Beijing Districts
+disp("Start District-wise Linear Regression...")
 
 hold on; triplot(TRI, vx, vy); fill(vx(TRI(20,:)), vy(TRI(20,:)), [0.5 0.5 0.5], vx(TRI(19,:)), vy(TRI(19,:)), 'm');
 for i=[2,3]
@@ -204,12 +218,9 @@ for i=[21,35,36,34,32]
 end
 % This generates Fig - BJ TRI and Districts
 
-
-%% District-wise Linear Regression
 tic;
-stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
-stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
-% shape: 277410 * 49
+% stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
+% stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
 
 mat_D = stepAIC_DM(train_id,:); 
 train_mat_D = mat_D; train_mat_Z = mat_Z; train_responses = totalPrice_log_std(train_id); temp_df = df(train_id,:);
@@ -272,21 +283,49 @@ toc; % running time was 7 seconds
 %p-value      0.36133          0.33628      0.63175     5.283e-21   0.069686    0.0001      6.0194e-07   3.572e-42     8.2965e-12
 
 
-%% Estimated Zero Region, LBR and UBR
-stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
-stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
+%% Part V: Visualization of Triangulation and Estimated Varying Coefficient
+% Estimated Zero Region, LBR and UBR
+% stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
+% stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
 
-% trial: whether it also works for stepAIC_DM_std
+% Generate penalized estimator p_b_hat by using all training data points
 cols = 1:length(stepAIC_DM(1,:));
 m = length(cols);
 mat_Z = zeros(length(train_id), m*nc);
 for k = 1:length(train_id)
-   %mat_Z(k, 1:nc) = train_B(k, :);
    for j = 1:length(cols)
       mat_Z(k, (j-1)*nc+1:(j)*nc) = train_B(k, :).*stepAIC_DM(train_id(k), cols(j)); 
    end
 end
+test_mat_Z = zeros(length(test_id), m*nc);
+for k = 1:length(test_id)
+   for j = 1:length(cols)
+      test_mat_Z(k, (j-1)*nc+1:(j)*nc) = test_B(k, :).*stepAIC_DM(test_id(k), cols(j)); 
+   end
+end
+mat_D = stepAIC_DM(train_id,:); 
+test_mat_D = stepAIC_DM(test_id,:);
+b_hat = (transpose(mat_Z) * mat_Z + 1 / (log(length(train_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * totalPrice_log_std(train_id); 
+
+nlam = 20; a = 3.7;threshold = 10 ^ (-3); 
+lam_vec = linspace(0.01, 0.4, nlam);bic = zeros(nlam, 3); converged_or_not = zeros(1,nlam);
+for q = 1:nlam
+    [p_b_hat, dist_logical] = update_p_b_hat_2(mat_Z, totalPrice_log_std(train_id), b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(train_id),2,6);
+    converged_or_not(q) = dist_logical;
+    bic(q,1) = log(mean((totalPrice_log_std(train_id) - mat_Z * p_b_hat).^2)) + log(length(train_id)) * sum(p_b_hat ~=0) / length(train_id);
+    bic(q,2) = log(mean((totalPrice_log_std(train_id) - mat_Z * p_b_hat).^2));
+    bic(q,3) = sum(p_b_hat ==0);
+end
+
+[temp_min, temp_index] = min(bic(:,1));
+[p_b_hat, dist_logical] = update_p_b_hat_2(mat_Z, totalPrice_log_std(train_id), b_hat, threshold, lam_vec(temp_index), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(train_id),2,6); sum(p_b_hat ~=0)/length(p_b_hat)
+
 % generate grid points for Beijing Housing data (used for later visualization)
+
+% pv is the boundary points of the polygon
+pv=[116.71 39.96; 116.5 40.01; 116.4 40.18; 116.4 40.1;116.32 40.1 ;116.3 40.24; 116.2 40.24; 116.25 39.97; 116.1 39.94; 116.36 39.7;116.36 39.8050; 116.4459 39.7545; 116.62 39.865; 116.71 39.87] ;
+pgon = polyshape(pv(:,1), pv(:,2)); plot(pgon);
+
 grid_len = 300;
 grid_s = linspace(116.1, 116.75, grid_len + 2); grid_t = linspace(39.7,40.3, grid_len + 2); grid_s = grid_s(2:(grid_len+1)); grid_t = grid_t(2:(grid_len+1));
 [grid_S, grid_T] = meshgrid(grid_s, grid_t); grid_S = reshape(grid_S, [grid_len^2, 1]); grid_T = reshape(grid_T, [grid_len^2, 1]);
@@ -320,13 +359,20 @@ toc; % Elapsed time is about 6 seconds
 
 % This generates the Fig - Estimated Zero Region LBR UBR for BJ housing
 cols_present = [4 5 7];
+col_min = 0; col_max = 0;
+for i=1:length(cols_present)
+    cols = cols_present(i);  
+    col_min = min(col_min, min(grid_B * p_b_hat(1+(cols-1)*nc:cols*nc)));
+    col_max = max(col_max, max(grid_B * p_b_hat(1+(cols-1)*nc:cols*nc)));  
+end
+
 for i=1:length(cols_present)
     cols = cols_present(i);
     LBM = sort(MCB_records{min(find(CR_records(:, cols_present(i)) > 0.95)), 2*cols_present(i)-1}); 
     UBM = sort(MCB_records{min(find(CR_records(:, cols_present(i)) > 0.95)), 2*cols_present(i)}) ;
    
     subplot(4,length(cols_present),i); hold on; triplot(TRI, vx, vy); % Plot estimated coef. functions
-    scatter(grid_S, grid_T, 1, grid_B * p_b_hat(1+(cols-1)*nc:cols*nc));caxis manual; caxis([col_min col_max]); title(stepAIC_col_names(cols_present(i)));
+    scatter(grid_S, grid_T, 1, grid_B * p_b_hat(1+(cols-1)*nc:cols*nc)); caxis manual; caxis([col_min col_max]); title(stepAIC_col_names(cols_present(i)));
    
     hold off;
     subplot(4,length(cols_present),i+length(cols_present)); hold on; triplot(TRI, vx, vy); % Plot estimated zero regions
