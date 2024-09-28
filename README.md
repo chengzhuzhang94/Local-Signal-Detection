@@ -57,13 +57,19 @@ The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jp
 
 - calculate estimated zero regions: **211** seconds in total for 4 sample sizes
 
-- MCR running Time
+- Coverage Probability running Time
     1. n=500: **1277** seconds
     2. n=1000: **1473** seconds
     3. n=2000: **2052** seconds
     4. n=5000: **9016** seconds
 
 - Performance comparison for different Triangulations when n=2000: **193** seconds in total for 4 different types of Triangulations
+
+## Binary Distribution Response Simulation
+
+- we have 3 sample sizes: 2000, 5000, 8000
+
+- 100 loops to calculate $$P_e$$ and ISE: **3065** seconds in total for 3 sample sizes
 
 ## Poisson Distribution Response Simulation
 
