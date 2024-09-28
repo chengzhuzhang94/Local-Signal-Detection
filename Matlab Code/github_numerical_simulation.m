@@ -1,10 +1,21 @@
-%% Simulation 1: Continuous Response
+% Guide
 
-% UDF values
+% Part I: calculate optimized TRI for each sample size
+% Part II: repeat data generation and fitting to get summary table of P_e and ISE
+% Part III: plot estimated zero region and MCR
+% Part IV: Calculate Probability Coverage
+% Part V: Performance of different TRI (Optimized, Denser, Sparser, Uniform). We pick sample size n=2000 as example
+
+%% Part I: calculate optimized TRI for each sample size
+
+% Define Varying Coefficient Functions
 f = @(x,y) sqrt((x-0.5).^2 + (y-0.5).^2); fd = @(p) ddiff(drectangle(p, 0, 2, 0, 2), dcircle(p, 1, 1, 0.5)); fh=@(p) 1+4*dcircle(p,1,1,0.5);
 f1 = @(x,y) 1.* sin(2.*pi./(sqrt(2)-0.5) .* (sqrt((x-1).^2+(y-1).^2)-0.5))+1; f2 = @(x,y) 2.* (exp((y-1).* (y>=1)) - 1) ; f3 = @(x,y) 0 .* y;
 
-% Part 0: Generate optimized TRI
+% Part 0: Generate optimized TRI for all sample sizes
+
+% generate TRI for each h value. h is a hyperparameter used in the function
+% distmesh2d()
 h_opt = 0.13:0.01:0.21;
 for j = 1:length(h_opt)
     rng(1000); % Set seed to make sure the generated triangulations are identical
@@ -23,30 +34,34 @@ for j = 1:length(h_opt)
     end 
 end
 
+% In total, we have 4 different sample sizes
 n_choice = [500, 1000, 2000, 5000]; 
 h_choice = 0.14:0.01:0.22; 
 m = 3;
 bic_records = zeros(length(n_choice), length(h_choice));
 
 % sample size: 500
-rng(2);
+rng(100);
 for i=1
     n = n_choice(i);
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
     while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
+        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
+        % Use beta distribution to generate locations of data points
         temp_theta = 2*pi*rand(1);
         c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
         if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
             X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
         end
     end
+    % generate response values via defined varying coefficient functions
     beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
     X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
     Z = X_1.*beta_1 + X_2.*beta_2+X_3.*beta_3+epsilon;
     ori_Z = Z;
     
     for j=1:length(h_choice)
+        % generate Triangulations
         disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
         if abs(h_choice(j) - 0.17) < 0.0001
             p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
@@ -58,8 +73,13 @@ for i=1
         [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
            vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
         nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
+        
+        % Call "CZ_SPL_est" to generate design matrix of Bernstein basis
+        % polynomials
         [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
         
+        % To get the final design matrix, we need to multiply covariant
+        % values to Bernstein basis polynomials
         mat_Z = zeros(n, m*nc);
         for k = 1:n
             temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
@@ -68,8 +88,9 @@ for i=1
         full_mat_Z = mat_Z;
         mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
         
-        %b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
         b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
+        
+        % Calculate BIC value
         bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
     end
     disp(['The experiment of n:', num2str(n), ' is finished'])
@@ -78,13 +99,13 @@ for i=1
 end
 [~, argmin] = min(bic_records(1, :), [], 2); h_choice(argmin) % best h choice is 0.21
 
-% sample size: 1000
-rng(202);
+% sample size: 1000. Similar to the case sample size=500
+rng(200);
 for i=2
     n = n_choice(i);
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
     while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
+        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
         temp_theta = 2*pi*rand(1);
         c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
         if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
@@ -125,16 +146,15 @@ for i=2
     [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
     disp(['The best h value is ', num2str(h_choice(argmin))])
 end
-[~, argmin] = min(bic_records(1:2, :), [], 2); h_choice(argmin) % best h choice is 0.21, 0.2 (seed 202)
+[~, argmin] = min(bic_records(1:2, :), [], 2); h_choice(argmin) % best h choice is 0.21
 
-scatter(h_choice, bic_records(2, :))
-
-for curr_seed = 200:220
-    rng(curr_seed); i = 2;
-    n = 1000;
+% sample size: 2000. Similar to the case sample size=500
+rng(200);
+for i=3
+    n = n_choice(i);
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
     while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
+        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
         temp_theta = 2*pi*rand(1);
         c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
         if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
@@ -145,21 +165,21 @@ for curr_seed = 200:220
     X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
     Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3 + epsilon;
     ori_Z = Z;
-
+    
     for j=1:length(h_choice)
-        %disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
+        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
         if h_choice(j) == 0.17
             p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
         else
             rng(1000);
             [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
         end 
-
+              
         [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
            vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
         nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
         [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
-
+        
         mat_Z = zeros(n, m*nc);
         for k = 1:n
             temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
@@ -167,21 +187,68 @@ for curr_seed = 200:220
         end
         full_mat_Z = mat_Z;
         mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-
+        
         b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
         bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
     end
-    disp(['The experiment of seed:', num2str(curr_seed), ' is finished'])
+    disp(['The experiment of n:', num2str(n), ' is finished'])
     [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
     disp(['The best h value is ', num2str(h_choice(argmin))])
-
-    %[~, argmin] = min(bic_records(1:2, :), [], 2); h_choice(argmin) % best h choice is 0.21
-
 end
+[~, argmin] = min(bic_records(1:3, :), [], 2); h_choice(argmin) % best h choice is 0.19
 
+% sample size: 5000. Similar to the case sample size=500
+rng(100);
+for i=4
+    n = n_choice(i);
+    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
+    while(temp_no <= n)
+        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
+        temp_theta = 2*pi*rand(1);
+        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
+        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
+            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
+        end
+    end
+    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
+    X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
+    Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3 + epsilon;
+    ori_Z = Z;
+    
+    for j=1:length(h_choice)
+        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
+        if h_choice(j) == 0.17
+            p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
+        else
+            rng(1000);
+            [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
+        end 
+              
+        [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
+           vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
+        nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
+        [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
+        
+        mat_Z = zeros(n, m*nc);
+        for k = 1:n
+            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
+            mat_Z(k,:) = [temp1, temp2, temp3];
+        end
+        full_mat_Z = mat_Z;
+        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
+        
+        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
+        bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
+    end
+    disp(['The experiment of n:', num2str(n), ' is finished'])
+    [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
+    disp(['The best h value is ', num2str(h_choice(argmin))])
+end
+[~, argmin] = min(bic_records(1:4, :), [], 2); h_choice(argmin) % best h choice is 0.17
 
-%%
-% Part 1: Process of using optimized TRI and calculate its performance 
+% Now we get the best h choices are [0.21, 0.21, 0.19, 0.17] for sample sizes [500, 1000, 2000, 5000] respectively
+
+%% Part II: repeat data generation and fitting to get summary table of P_e and ISE
 kLoopTime=100;
 n_choice = [500, 1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.19, 0.17]; % These 4 are best h values (i.e., best triangulation)
 record_table = zeros(kLoopTime, length(n_choice), 9);  diag_lamb_vec = zeros(kLoopTime, 3); 
@@ -198,6 +265,8 @@ grid_S = grid_S(grid_idx); grid_T = grid_T(grid_idx);
 grid_f1 = f1(grid_S, grid_T); grid_f2 = f2(grid_S, grid_T); grid_f3 = f3(grid_S, grid_T); 
 grid_f2_zeroidx = find(grid_f2 == 0); grid_f3_zeroidx = find(grid_f3 == 0);
 
+% Repeat data generation and fitting to get summary results of Mean and Standard Error of simulations
+
 tic; trial_seed=92 ; % 
 % seed is set in the nested for loop
 for i=1:length(n_choice)
@@ -211,7 +280,6 @@ for i=1:length(n_choice)
         vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
     nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
     
-    %rng(1111); 
     rng(trial_seed);
     for j=1:kLoopTime
         temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
@@ -271,6 +339,8 @@ for i=1:length(n_choice)
     end
 end
 toc;
+% running time: 200s
+
 % Display the mean and std
 str = zeros(length(n_choice), 9); str = string(str);
 for i = 1:length(n_choice)
@@ -300,9 +370,11 @@ summary_T
 %     "1000"    "F3"      "0.0501 (0.0780)"    "0.0167 (0.0330)"    "0.0651 (0.0382)"
 %     "2000"    "F3"      "0.0435 (0.0713)"    "0.0061 (0.0105)"    "0.0324 (0.0141)"
 %     "5000"    "F3"      "0.0390 (0.0587)"    "0.0024 (0.0040)"    "0.0143 (0.0053)"
-%% Add-on: estimated zero region
+
+%% Part III: plot estimated zero region and MCR
 % Prepare for all plots and MCR diagrams %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Generate one-time the width over total number of triangles (WOT)
 n_choice = [500, 1000, 2000, 5000]; best_h_choices = [0.21, 0.21, 0.19, 0.17];
 all_b_hat = cell(length(n_choice), 1); all_p_b_hat = cell(length(n_choice), 1); 
 all_grid_B = cell(length(n_choice), 1); all_grid_valid_id = cell(length(n_choice), 1); 
@@ -324,7 +396,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
     nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
     all_grid_B{i, 1} = grid_B; all_grid_valid_id{i, 1} = grid_valid_id;
     
-    rng(5);
+    rng(5); % set seed before generating data points
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points here
     while(temp_no <= n)
         temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
@@ -384,7 +456,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
     all_wot(i, 1:3) = [find(CR_records(:,1) > 0.95, 1)-1 find(CR_records(:,2) > 0.95, 1)-1 find(CR_records(:,3) > 0.95, 1)-1];
     all_wot(i, 1:3) = all_wot(i, 1:3) ./ nt;
 end
-toc;
+toc; 
 all_wot
 
 % rng(5), it took 150 seconds to finish
@@ -426,7 +498,7 @@ for i=1:length(n_choice)
 end
 % This generates: Fig - Estimated Zero Regions of Continuous Simulation
 
-% MCR
+% generate MCR plot
 for i=1:length(n_choice)
     temp_TRI = all_TRI{i, 1}; temp_vx = all_vx{i, 1}; temp_vy = all_vy{i, 1};
     for j=1:m
@@ -457,17 +529,18 @@ for i=1:length(n_choice)
 end
 % This generates: Fig - MCR of Continuous Simulation
 
-%% --------------------------------------------------------------------------------------------------
-%% Coverage Prob.
+%% Part IV: Calculate Probability Coverage
 
-%% Use old code - sample size 500
+% Calculate Coverage Prob. for each sample size
+%% Use old code - sample size 500 (confirmed)
 rng(1000);
-[p,TRI] = distmesh2d(fd,fh,0.21,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
+[p,TRI] = distmesh2d(fd,fh,0.21,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2); % optimized h value is 0.21 (3rd argument in distmesh2d()
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
 
+% Plot triangulation and we manually enter "m_star_low" and "m_star_high" below
 hold on;
 trimesh(TRI, vx, vy);
 for i = 1:nt
@@ -477,20 +550,24 @@ plot([0 2], [1 1]);
 hold off;
 
 n=500;
+% lower bound region would be those triangles that are entirely contained in true zero region
 m_star_low = [1,2,3,4,5,6,12,13,14,15,16,17,29,31];
+% upper bound region would be those triangles that are entirely or partially contained in true zero region. 
+% If a triangle has interaction with the boundary line, it would be only contained in the variable "m_start_high"
 m_star_high = [1,2,3,4,5,6,12,13,14,15,16,17,29,31, 7,30,22,23];
 m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3,1} = 1:nt; 
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
 tic; outloopTimes=100;
-[sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR(100, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
-toc;
+[sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR(2, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
+toc; % it took 1467 seconds
 sum(sep_count_TRI1) % rng(2) -> [100 96 99]
-cover_count_TRI1 / outloopTimes % 0.95
+cover_count_TRI1 / outloopTimes % 0.95 
 [mean(width_records_TRI1)./nt; std(width_records_TRI1)]
-
-%% Sample size - 1000
+%          0    0.3023    0.1779
+%          0    2.8159    5.1373
+%% Sample size - 1000 (confirmed)
 
 rng(1000);
 [p,TRI] = distmesh2d(fd,fh,0.21,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
@@ -499,6 +576,7 @@ rng(1000);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
 
+% Plot triangulation and we manually enter "m_star_low" and "m_star_high" below
 hold on;
 trimesh(TRI, vx, vy);
 for i = 1:nt
@@ -507,7 +585,7 @@ end
 plot([0 2], [1 1]);
 hold off;
 
-n=1000;
+n=1000; % assign sample size
 m_star_low = [1,2,3,4,5,6,12,13,14,15,16,17,29,31];
 m_star_high = [1,2,3,4,5,6,12,13,14,15,16,17,29,31, 7,30,22,23];
 m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3,1} = 1:nt; 
@@ -516,12 +594,15 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
 tic; outloopTimes=100;
 [sep_count_TRI2, cover_count_TRI2, width_records_TRI2, LBM_outloop_TRI2] = CZ_BootstrapCR(100, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
-toc;
-sum(sep_count_TRI2) % [100 98 100] (seed 20), [100 97 100] (seed 100)
-cover_count_TRI2 / outloopTimes % 
+toc; % it took 1910 seconds
+sum(sep_count_TRI2) %
+% rng(100) -> [100 97 100]
+cover_count_TRI2 / outloopTimes % rng(100) -> 0.97
 [mean(width_records_TRI2)./nt; std(width_records_TRI2)]
+%          0    0.2523    0.1160
+%          0    3.7061    4.9793
 
-%% Sample size - 2000
+%% Sample size - 2000 (confirmed)
 rng(1000);
 [p,TRI] = distmesh2d(fd,fh,0.19,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
@@ -529,6 +610,7 @@ rng(1000);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
 
+% Plot triangulation and we manually enter "m_star_low" and "m_star_high" below
 hold on;
 trimesh(TRI, vx, vy);
 for i = 1:nt
@@ -539,7 +621,7 @@ hold off;
 
 n=2000;
 m_star_low = [23,25,10,11,17,16,5,21,22,9,8,20,15,14];
-m_star_high = [23,25,10,11,17,16,5,21,22,9,8,20,15,14, 1,7,18];
+m_star_high = [23,25,10,11,17,16,5,21,22,9,8,20,15,14, 1,7,18,24];
 m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3,1} = 1:nt; 
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
@@ -547,10 +629,13 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 tic;
 outloopTimes=100;
 [sep_count_TRI3, cover_count_TRI3, width_records_TRI3, LBM_outloop_TRI3] = CZ_BootstrapCR(2, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
-toc;
-sum(sep_count_TRI3) % 
-cover_count_TRI3 / outloopTimes
+toc; % it took 2764 seconds
+sum(sep_count_TRI3) 
+% rng(2) -> [100 99 100]
+cover_count_TRI3 / outloopTimes % rng(2) -> 0.99
 [mean(width_records_TRI3)./nt; std(width_records_TRI3)]
+%          0    0.2623    0.0638
+%          0    3.4263    3.4460
 
 %% Sample size - 5000
 
@@ -561,7 +646,7 @@ vx = p(:,1); vy = p(:,2);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
 
-[vx(TRI(42, 1)) vy(TRI(42, 1)); vx(TRI(42, 2)) vy(TRI(42, 2)); vx(TRI(42, 3)) vy(TRI(42, 3));]
+% Plot triangulation and we manually enter "m_star_low" and "m_star_high" below
 hold on;
 trimesh(TRI, vx, vy);
 for i = 1:nt
@@ -571,32 +656,30 @@ plot([0 2], [1 1]);
 hold off;
 
 n=5000;
+% Triangles 23, 41, 5, 6, 3, 27 have overlaps with the horizontal line y=1
 m_star_low = [37,38,39,44,22,16,32,45,43,36,35,33,34,20,7,2,1,21,14,4,15];
-m_star_high = [37,38,39,44,22,16,32,45,43,36,35,33,34,20,7,2,1,21,14,4,15,  41,42,40,27,5,6,3];
+m_star_high = [37,38,39,44,22,16,32,45,43,36,35,33,34,20,7,2,1,21,14,4,15,  41,42,40,27,5,6,3,23];
 m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3,1} = 1:nt; 
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
 tic;
 outloopTimes=100;
-[sep_count_TRI4, cover_count_TRI4, width_records_TRI4, LBM_outloop_TRI4] = CZ_BootstrapCR(100, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
-toc;
-sum(sep_count_TRI4) % candidate seed: 100, 99, 100
+[sep_count_TRI4, cover_count_TRI4, width_records_TRI4, LBM_outloop_TRI4] = CZ_BootstrapCR(99, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
+toc; % it took 10587 seconds
+sum(sep_count_TRI4) 
+% seed 100: [100 99 100] 
+% seed 12: [100 99 100]
 cover_count_TRI4 / outloopTimes
 [mean(width_records_TRI4)./nt; std(width_records_TRI4)]
+%          0    0.3556    0.0663
+%          0    5.5582    4.0286
 
 %% Appendix --------------------------------------------------------------------------------------------------
 
-trial_records = zeros(20, 4)
-for curr_seed = 1001:1020
-     trial_records(curr_seed-1000, 1) = curr_seed;
-     outloopTimes=100;
-    [curr_sep_count_TRI, ~, ~, ~] = CZ_BootstrapCR(curr_seed, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 30, 1, 1, 2, 3.7, 0, outloopTimes) ;
-    trial_records(curr_seed-1000, 2:4) = curr_sep_count_TRI;
-end
 
-%% Part 2: Performance of different TRI (Optimized, Denser, Sparser, Uniform). We pick sample size n=2000 as example
-
+%% Part V: Performance of different TRI (Optimized, Denser, Sparser, Uniform). We pick sample size n=2000 as example
+tic;
 n = 2000;
 record_table_ise_unpen = zeros(kLoopTime, 1*12);  
 record_table_ise_scad = zeros(kLoopTime, 1*12);  
@@ -612,7 +695,6 @@ nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt;
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
 rng(111);
 for i=1:kLoopTime
-    %% Generate points first
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); 
     while(temp_no <= n) 
         temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
@@ -647,7 +729,6 @@ for i=1:kLoopTime
     lam_vec = linspace(0.01, 0.4, nlam);
     bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
     for q = 1:nlam
-        %[p_b_hat, dist_logical] = update_p_b_hat(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));
         [p_b_hat, dist_logical, ~] = update_p_b_hat_2(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id),1,0);      
         converged_or_not(q) = dist_logical;
         bic(q) = log(mean((Z - mat_Z * p_b_hat).^2)) + log(length(valid_id)) * sum(p_b_hat ~=0) / length(valid_id);
@@ -717,7 +798,6 @@ for i=1:kLoopTime
     lam_vec = linspace(0.01, 0.4, nlam);
     bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
     for q = 1:nlam
-        %[p_b_hat, dist_logical] = update_p_b_hat(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));
         [p_b_hat, dist_logical, ~] = update_p_b_hat_2(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id),1,0);      
         converged_or_not(q) = dist_logical;
         bic(q) = log(mean((Z - mat_Z * p_b_hat).^2)) + log(length(valid_id)) * sum(p_b_hat ~=0) / length(valid_id);
@@ -787,7 +867,6 @@ for i=1:kLoopTime
     lam_vec = linspace(0.01, 0.4, nlam);
     bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
     for q = 1:nlam
-        %[p_b_hat, dist_logical] = update_p_b_hat(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));
         [p_b_hat, dist_logical, ~] = update_p_b_hat_2(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id),1,0);      
         converged_or_not(q) = dist_logical;
         bic(q) = log(mean((Z - mat_Z * p_b_hat).^2)) + log(length(valid_id)) * sum(p_b_hat ~=0) / length(valid_id);
@@ -822,7 +901,7 @@ nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt;
 
 rng(111);
 for i=1:kLoopTime
-    %% Generate points first
+    % Generate points first
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); 
     while(temp_no <= n) 
         temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
@@ -858,7 +937,6 @@ for i=1:kLoopTime
     lam_vec = linspace(0.01, 0.4, nlam);
     bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
     for q = 1:nlam
-        %[p_b_hat, dist_logical] = update_p_b_hat(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id));
         [p_b_hat, dist_logical, ~] = update_p_b_hat_2(mat_Z, Z, b_hat, threshold, lam_vec(q), a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, 300, length(valid_id),2,1);      
         converged_or_not(q) = dist_logical;
         bic(q) = log(mean((Z - mat_Z * p_b_hat).^2)) + log(length(valid_id)) * sum(p_b_hat ~=0) / length(valid_id);
@@ -884,6 +962,7 @@ for i=1:kLoopTime
     record_table_pe(i, 12) = (length(grid_f3_zeroidx) + length(grid_f3_zeroidx_pred) - 2*length(intersect(grid_f3_zeroidx, grid_f3_zeroidx_pred))) / length(grid_valid_id); % P_e part is done
     
 end
+toc; % entire section took 193 seconds
 
 str_ise_unpen = zeros(12,1); str_ise_unpen = string(str_ise_unpen);
 for i = 1:12
@@ -907,7 +986,7 @@ summary_T = [string('Metric') string('Func') 'Optimized h' 'Denser TRI' 'Sparser
     'ISE_SCAD' string('F_1') str_ise_scad(1) str_ise_scad(4) str_ise_scad(7) str_ise_scad(10);...
     'ISE_SCAD' string('F_2') str_ise_scad(2) str_ise_scad(5) str_ise_scad(8) str_ise_scad(11);...
     'ISE_SCAD' string('F_3') str_ise_scad(3) str_ise_scad(6) str_ise_scad(9) str_ise_scad(12);];
-
+summary_T
 % content of summary_T:
 %     "Metric"       "Func"    "Oprimized h"        "Denser TRI"         "Sparser TRI"        "Uniform"        
 %     "P_e"          "F_1"     "0.0000 (0.0000)"    "0.0007 (0.0066)"    "0.0000 (0.0000)"    "0.0133 (0.0126)"
@@ -919,174 +998,3 @@ summary_T = [string('Metric') string('Func') 'Optimized h' 'Denser TRI' 'Sparser
 %     "ISE_SCAD"     "F_1"     "0.1777 (0.0230)"    "0.1628 (0.0654)"    "0.3310 (0.0476)"    "0.3370 (0.2137)"
 %     "ISE_SCAD"     "F_2"     "0.0244 (0.0118)"    "0.0726 (0.0384)"    "0.0717 (0.0141)"    "0.1328 (0.1524)"
 %     "ISE_SCAD"     "F_3"     "0.0055 (0.0103)"    "0.0399 (0.0614)"    "0.0010 (0.0047)"    "0.1852 (0.3217)"
-
-%% Confidence Region Part
-paired_LBM = cell(length(n_choice), 9); % beta_1_LBR, beta_1_m_star, beta_1_UBR, beta_2_LBR, ..., beta_3_UBR;
-
-for i=1:length(n_choice)
-    n = n_choice(i); rng(1000);h_now = best_h_values(i);  
-    if (h_now == 0.17) 
-        p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-    else
-        [p,TRI] = distmesh2d(fd,fh,h_now,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-    end
-    [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-        vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-    nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-
-    [beta_1,beta_2,beta_3,X,Y,Z,B,valid_id,mat_Z,b_hat] = CZ_generate_dp(0, n, m, f1, f2, f3, vx, vy, TRI, v1, v2, v3, nt, nc, nv, d, 6);
-    % We use the CZ_bootstrap instead of the _sep version since that's how we fit the model in the first place and they are matched 
-    records =  CZ_bootstrap(2, TRI, mat_Z, Z, n, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, 1, 1, 3.7, 0);
-
-    %Usage: function [cr] = CZ_CoverageRate_paired(records, LBM, LBM_subset, UBM, UBM_subset);
-    MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
-    for k = 1:m
-        TRI_no = 1+(k-1)*nt:k*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
-   
-        for w = 0:1:nt
-            cr = 0; LBM = []; UBM = [];
-            for p = 0:1:nt-w
-                temp_LBM = pi_idx(1:p); temp_UBM = sort(pi_idx(1:p+w));
-                temp_cr = CZ_CoverageRate(records(:, TRI_no), temp_LBM, temp_UBM);
-                if temp_cr > cr
-                    cr = temp_cr; LBM = temp_LBM; UBM = temp_UBM; 
-                end
-            end
-            MCB_records{w+1, 2*k-1} = sort(LBM); MCB_records{w+1, 2*k} = sort(UBM); CR_records(w+1, k) = cr;
-        end
-    end
-    
-    [find(CR_records(:,1) > 0.95, 1)-1 find(CR_records(:,2) > 0.95, 1)-1 find(CR_records(:,3) > 0.95, 1)-1] 
-end
-records =  CZ_bootstrap(2, TRI, mat_Z, Z, n, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, 1, 1, 3.7, 0);
-
-%%
-conf_records = zeros(length(n_choice), 3);
-
-for i=1:length(n_choice)
-    n = n_choice(i);
-    rng(1000);
-    if best_h_values(i)==0.17
-        p = p17; TRI=TRI17; vx = p(:,1); vy = p(:,2);
-    else
-        [p,TRI] = distmesh2d(fd,fh, best_h_values(i),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-    end
-    
-    [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-        vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-    nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
-    [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-    
-    [beta_1,beta_2,beta_3,X,Y,Z,B,valid_id,mat_Z,b_hat] = CZ_generate_dp(0, n, m, f1, f2, f3, vx, vy, TRI, v1, v2, v3, nt, nc, nv, d, 6);
-    records =  CZ_bootstrap(2, TRI, mat_Z, Z, n, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, 1, 1, 3.7, 0);
-    %Usage: function [cr] = CZ_CoverageRate_paired(records, LBM, LBM_subset, UBM, UBM_subset);
-    MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
-    for k = 1:m
-        TRI_no = 1+(k-1)*nt:k*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
-        for w = 0:1:nt
-            cr = 0; LBM = []; UBM = [];
-            for p = 0:1:nt-w
-                temp_LBM = pi_idx(1:p); temp_UBM = sort(pi_idx(1:p+w));
-                temp_cr = CZ_CoverageRate(records(:, TRI_no), temp_LBM, temp_UBM);
-                if temp_cr > cr
-                    cr = temp_cr; LBM = temp_LBM; UBM = temp_UBM; 
-                end
-            end
-            MCB_records{w+1, 2*k-1} = sort(LBM); MCB_records{w+1, 2*k} = sort(UBM); CR_records(w+1, k) = cr;
-        end
-    end
-    conf_records(i, 1:3) = [find(CR_records(:,1) > 0.95, 1)-1 find(CR_records(:,2) > 0.95, 1)-1 find(CR_records(:,3) > 0.95, 1)-1];
-    conf_records(i, 1:3) = conf_records(1, 1:3) ./ nt;
-end
-conf_records
-
-%          0    0.4194    0.7742
-%          0    0.0135    0.0250
-%          0    0.0131    0.0242
-%          0    0.0087    0.0161
-
-rng(1000);
-[p,TRI] = distmesh2d(fd,fh,0.19,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-[nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-    vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
-[grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-
-n = 2000;
-[beta_1,beta_2,beta_3,X,Y,Z,B,valid_id,mat_Z,b_hat] = CZ_generate_dp(0, n, m, f1, f2, f3, vx, vy, TRI, v1, v2, v3, nt, nc, nv, d, 6);
-% We use the CZ_bootstrap instead of the _sep version since that's how we fit the model in the first place and they are matched 
-records =  CZ_bootstrap(2, TRI, mat_Z, Z, n, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, 1, 1, 3.7, 0);
-%Usage: function [cr] = CZ_CoverageRate_paired(records, LBM, LBM_subset, UBM, UBM_subset);
-MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
-for k = 1:m
-    TRI_no = 1+(k-1)*nt:k*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
-    for w = 0:1:nt
-        cr = 0; LBM = []; UBM = [];
-        for p = 0:1:nt-w
-            temp_LBM = pi_idx(1:p); temp_UBM = sort(pi_idx(1:p+w));
-            temp_cr = CZ_CoverageRate(records(:, TRI_no), temp_LBM, temp_UBM);
-            if temp_cr > cr
-                cr = temp_cr; LBM = temp_LBM; UBM = temp_UBM; 
-            end
-        end
-        MCB_records{w+1, 2*k-1} = sort(LBM); MCB_records{w+1, 2*k} = sort(UBM); CR_records(w+1, k) = cr;
-    end
-end
-conf_records(1, 1:3) = [find(CR_records(:,1) > 0.95, 1)-1 find(CR_records(:,2) > 0.95, 1)-1 find(CR_records(:,3) > 0.95, 1)-1];
-conf_records(1, 1:3) = conf_records(1, 1:3) ./ nt;
-
-
-%% Simulation 2: Binary Response
-
-%% Running time check
-
-% UNPEN
-
-record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-n_choice = [500, 2000, 5000]; best_h_values = [0.21, 0.19, 0.17];
-
-for i=1:length(n_choice)
-    tic;
-    n = n_choice(i);
-    rng(1100) ;h_now = best_h_values(i);  
-    if (h_now == 0.17) 
-        %p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-        rng(1100);
-        [p,TRI] = distmesh2d(fd,fh,h_now,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-    else
-        [p,TRI] = distmesh2d(fd,fh,h_now,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-    end
-    [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-        vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-    nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-    
-    disp(['The experiment of n:', num2str(n), ' started'])
-    for j=1:1
-        temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
-        while(temp_no <= n)
-            temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
-            temp_theta = 2*pi*rand(1);
-            c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-            if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-                X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-            end
-        end
-        beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-        X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
-        Z = X_1.*beta_1 + X_2.*beta_2+X_3.*beta_3+epsilon;
-        ori_Z = Z;
-        
-        [B, valid_id] = CZ_SPL_est(X,Y,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
-        
-        
-        mat_Z = zeros(n, m*nc);
-        for k = 1:n
-            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-            mat_Z(k,:) = [temp1, temp2, temp3];
-        end
-        full_mat_Z = mat_Z; 
-        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
-    end
-    toc;
-end
