@@ -109,6 +109,10 @@ There are three CSV files in the before-mentioned Kaggle dataset address, which 
 
 The main code script is `github_numerical_simulation.m` which can be found in the subfolder "Matlab Code" and supplementary TRI plots are stored at the subfolder "Visualization".
 
+## Binary Response Simulation
+
+The main code script is `github_logistic_simulation.m` which can be found in the subfolder "Matlab Code".
+
 ## Poisson Response Simulation
 
 The main code script is `github_Poisson_simulation.m` which can be found in the subfolder "Matlab Code".
@@ -128,3 +132,5 @@ Besides main Matlab scripts that are mentioned above, you also need other helper
 - `update_p_b_hat_2.m`: created by Chengzhu Zhang, which takes unpenalized estimator "`b_hat`", design matrix "`mat_Z`", response "`Z`" and Triangulation related values as input, to calculate SCAD penalized estimator "`p_b_hat`". This function is used for continuous response variable.
 
 - `update_p_b_hat_poisson.m`: created by Chengzhu Zhang, which takes unpenalized estimator "`b_hat`", design matrix "`mat_Z`", response "`Z`" and Triangulation related values as input, to calculate SCAD penalized estimator "`p_b_hat`". This function is used for discrete response variable that follows a Poisson distribution.
+
+- Bootstrap related functions: `CZ_bootstrap.m`, `CZ_bootstrap_customized`, `CZ_bootstrap_logic_nested.m`, `CZ_bootstrap_sep.m`, `CZ_bootstrap_sep_customized.m`, `CZ_BootstrapCR.m`, `CZ_CoverageRate.m`. We have multiple versions because we use Wild Bootstrap for continuous response and simple Bootstrap for discrete response, which are defined as different functions. Moreover, some functions are defined for implementing one loop of Bootstrap which would be used in other functions.
