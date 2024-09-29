@@ -63,8 +63,6 @@ end
 if bootstrap_opt==2
     optimized_lambda = zeros(1, m);
     for loop=1:kLoopTime
-        %Sep_Z = zeros(m,n); % Sep_Z is separated responses
-        %Res = zeros(m, n); Z_bootbase = zeros(m, n); 
         for vcf_no=1:m
             % vcf are the initial of "Varying Coefficient Functions". In this loop, we generate & estimate the vcf_no-th
             % varying coefficient function
