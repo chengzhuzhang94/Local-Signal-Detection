@@ -41,11 +41,17 @@ All Matlab code files and plots are stored at two folders: "**Matlab Code**" and
 
 - The file `github_numerical_simulation` is for simulation code for the case when the response variable is continuous.
 
+- The file `github_logistic_simulation.m` is for the case when the response variable follows a Bernoulli distribution.
+
 - The file `github_Poisson_simulation.m` is for the case when the response variable follows a Poisson distribution.
 
 - And `github_BJ_ver_2.m` is for the case when we use Beijing housing price as the application of our proposed method. Specifically, the relation between Matlab code and plots are listed as below
 
 The script `github_numerical_simulation.m` generates: `TRI-BIC.jpg`, `TRI-DEN.jpg`, `TRI-SPARSE.jpg`, `TRI-UNIF.jpg`, `Fig - Estimated Zero Regions of Continuous Simulation.jpg`, `Fig - MCR of Continuous Simulation.jpg`.
+
+The script `github_logistic_simulation.m` generates: `Fig - Binary Response Simulation Estimated Zero Regions.jpg`.
+
+The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `Fig 1 - BJ housing price scatterplot and TRI.jpg`.
 
 # Running Time
 
