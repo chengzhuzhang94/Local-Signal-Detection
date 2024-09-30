@@ -1,5 +1,22 @@
 function [new_b_hat, dist_logical, distance_records,probs, first_deri_l, second_deri_l, Dgn_lambda, accuracy_record] = update_p_b_hat_logistic_NoC(...
     mat_Z, Z, b_hat, threshold, lambda, a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, kLoop, n, option,tune)
+% Purpose: update penalized estimator for logistic regression
+% This function takes design matrix mat_Z, response Z and TRI info as inputs
+% The output contains penalized estimator, convergence indicator and zero triangle indicator vector
+
+% ARGUMENTS:
+% mat_Z: design matrix
+% Z: response variable
+% b_hat: unpenalized estimator
+% threshold: the threshold value for shrunking coefficients on a triangle to 0
+% lambda: hyperparameter in SCAD penalty
+% a: hyperparameter in SCAD penalty
+% m: number of varying coefficients
+% (nc,d,v1,v2,v3,nt,nv,ie1,TRI): these are associated values of Triangulation TRI
+% kLoop: number of iteration
+% n: sample size
+% option: 1 means no tuning on diagonal matrix to avoid matrix inversion singularity, 2 means adding a small identity matrix to avoid matrix inversion singularity
+% tune: adjust value that are added to avoid matrix inversion singularity
 
 % The original INTERCEPT is also approximated by bivariate spline
 distance_records = zeros(1,kLoop);
@@ -70,11 +87,14 @@ while( distance >= 10^(-3) && looptime < kLoop)
     second_deri_l = transpose(mat_Z(:,logical(zero_index)))*probs_diag*(eye(length(probs))-probs_diag)*mat_Z(:,logical(zero_index));
     
     % Updated non-zero part estimate via the likelihood function
-    if option == 2        
+    if option == 2       
+        % Add a diagonal term with scaling to avoid singularity
         new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (second_deri_l+length(Z).*Dgn_lambda+ tune / (log(length(Z))*nt) * eye(count)) \ (first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index)));
     elseif option == 1
+        % Add no diagonal terms
         new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (second_deri_l+length(Z).*Dgn_lambda) \ (first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index)));
     elseif option == 3
+        % Add a simple diagonal term withour scaling to avoid singularity
         new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (second_deri_l+length(Z).*Dgn_lambda+ tune * eye(count)) \ (first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index))); % Also need to set threshhold = 0
     end
     new_b_hat = nonzero_to_whole(new_nonzero_b_hat, zero_index); sum(zero_index) ;   

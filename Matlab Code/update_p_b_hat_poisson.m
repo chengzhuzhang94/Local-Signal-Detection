@@ -1,4 +1,19 @@
 function [new_b_hat, dist_logical] = update_p_b_hat_poisson(mat_Z, Z, b_hat, threshold, lambda, a, m, nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, TRI, kLoop, n)
+% Purpose: update penalized estimator for Poisson regression
+% This function takes design matrix mat_Z, response Z and TRI info as inputs
+% The output contains penalized estimator, convergence indicator and zero triangle indicator vector
+
+% ARGUMENTS:
+% mat_Z: design matrix
+% Z: response variable
+% b_hat: unpenalized estimator
+% threshold: the threshold value for shrunking coefficients on a triangle to 0
+% lambda: hyperparameter in SCAD penalty
+% a: hyperparameter in SCAD penalty
+% m: number of varying coefficients
+% (nc,d,v1,v2,v3,nt,nv,ie1,TRI): these are associated values of Triangulation TRI
+% kLoop: number of iteration
+% n: sample size
 
 nt = length(v1); temp_b_hat = b_hat; % Use temp_b_hat to record updated estimated coefficietns recursively
 zero_index = ones(m*nc,1); tri_index = ones(m*nt,1); full_tri = 1:(m*nt); % Indicate non-zero estimates and valid triangles
@@ -36,6 +51,7 @@ while( distance >= 10^(-4) && looptime < kLoop)
     Dgn_lambda = zeros(sum(zero_index), sum(zero_index));count = 0;
     for g = 1:m
         for j = 1:nc
+            % current: the g-th varying coef and j-th basis
             if zero_index((g-1)*nc+j)==1
                 count = count + 1;
                 temp_col = nc_tri(:, j); cell =0;
@@ -43,6 +59,7 @@ while( distance >= 10^(-4) && looptime < kLoop)
                     if temp_col(k)==1
                         temp_b1 = temp_b_hat(nc*(g-1)+TRI(k,1));temp_b2 = temp_b_hat(nc*(g-1)+TRI(k,2));temp_b3 = temp_b_hat(nc*(g-1)+TRI(k,3));
                         temp_norm = sqrt(temp_b1^2+temp_b2^2+temp_b3^2);
+                        % calculate the penalty term for the k-th triangle
                         cell = cell + (lambda*((temp_norm<=lambda)+(temp_norm>lambda) * ((a*lambda-temp_norm)>=0) * (a*lambda-temp_norm)/ (lambda*(a-1)))) / temp_norm;
                     end
                 end
@@ -52,25 +69,20 @@ while( distance >= 10^(-4) && looptime < kLoop)
         end
         
     end
-    %Dgn_lambda(count+1, count+1) = temp_b_hat(length(temp_b_hat));
     
-    % Old part for logistic regression
-    
+    % Updated part for Poisson regression
+    % following formulas follow derative of likelihood functions
     exp_part = exp(mat_Z(:,logical(zero_index)) * temp_b_hat(logical(zero_index)));
     first_deri_l = transpose(mat_Z(:,logical(zero_index)))*(Z-exp_part);
     second_deri_l = -transpose(mat_Z(:,logical(zero_index))) * diag(exp_part) * mat_Z(:,logical(zero_index));
-    %probs_diag = diag(probs);
-    %first_deri_l = transpose(mat_Z(:,logical(zero_index)))*(Z-probs);
-    %second_deri_l = -transpose(mat_Z(:,logical(zero_index)))*probs_diag*(eye(length(probs))-probs_diag)*mat_Z(:,logical(zero_index));
-    
+
     new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (-second_deri_l+length(Z).*Dgn_lambda + 10 / (log(length(Z))*nt) * eye(count)) \ (-first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index)));
     
-    %new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (second_deri_l+length(Z).*Dgn_lambda + 10 / (log(length(Z))*nt) * eye(count)) \ (first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index)));
-    %new_nonzero_b_hat = temp_b_hat(logical(zero_index)) - (second_deri_l+length(Z).*Dgn_lambda) \ (first_deri_l+length(Z).*Dgn_lambda*temp_b_hat(logical(zero_index)));
     new_b_hat = nonzero_to_whole(new_nonzero_b_hat, zero_index);    
     distance = mean((new_b_hat - temp_b_hat).^2); temp_b_hat = new_b_hat;
 end
 if distance < 10 ^ (-4)
+    % determine whether convergence happened
     dist_logical = true;
 end
 
