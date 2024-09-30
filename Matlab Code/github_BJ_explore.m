@@ -177,6 +177,8 @@ for i = 1:(length(p_b_hat)/nc)
     disp(sum(p_b_hat((i-1)*nc+1:i*nc)==0));
 end
 
+pv=[116.71 39.96; 116.5 40.01; 116.4 40.18; 116.4 40.1;116.32 40.1 ;116.3 40.24; 116.2 40.24; 116.25 39.97; 116.1 39.94; 116.36 39.7;116.36 39.8050; 116.4459 39.7545; 116.62 39.865; 116.71 39.87] ;
+pgon = polyshape(pv(:,1), pv(:,2)); plot(pgon);
 grid_len = 300;
 grid_s = linspace(116.1, 116.75, grid_len + 2); grid_t = linspace(39.7,40.3, grid_len + 2); grid_s = grid_s(2:(grid_len+1)); grid_t = grid_t(2:(grid_len+1));
 [grid_S, grid_T] = meshgrid(grid_s, grid_t); grid_S = reshape(grid_S, [grid_len^2, 1]); grid_T = reshape(grid_T, [grid_len^2, 1]);
@@ -287,9 +289,11 @@ n*log(SSE_SCAD/n)+2*sum(p_b_hat~=0) %-7.5549e+05
 
 %% Wild Bootstrap and MCB %%
 tic;
-records =  CZ_bootstrap_customized(2, 0.01, 0.4, 20, TRI, mat_Z, totalPrice_log_std(train_id), length(train_id), nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 3.7, 0); toc;
+records =  CZ_bootstrap_customized(2, 0.01, 0.4, 20, TRI, mat_Z, totalPrice_log_std(train_id), length(train_id), nc, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 3.7, 0); 
+toc;
 
-tic; MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
+tic; 
+MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
 for i = 1:m
    TRI_no = 1+(i-1)*nt:i*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
    
