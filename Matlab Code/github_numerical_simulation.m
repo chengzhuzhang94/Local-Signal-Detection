@@ -562,7 +562,9 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 tic; outloopTimes=100;
 [sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR(2, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
 toc; % it took 1467 seconds
-sum(sep_count_TRI1) % rng(2) -> [100 96 99]
+sum(sep_count_TRI1) 
+% Coverage Probability:
+% rng(2) -> [100 96 99] ./ 100
 cover_count_TRI1 / outloopTimes % 0.95 
 [mean(width_records_TRI1)./nt; std(width_records_TRI1)]
 %          0    0.3023    0.1779
@@ -596,7 +598,8 @@ tic; outloopTimes=100;
 [sep_count_TRI2, cover_count_TRI2, width_records_TRI2, LBM_outloop_TRI2] = CZ_BootstrapCR(100, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
 toc; % it took 1910 seconds
 sum(sep_count_TRI2) %
-% rng(100) -> [100 97 100]
+% Coverage Probability:
+% rng(100) -> [100 97 100] ./ 100
 cover_count_TRI2 / outloopTimes % rng(100) -> 0.97
 [mean(width_records_TRI2)./nt; std(width_records_TRI2)]
 %          0    0.2523    0.1160
@@ -631,7 +634,8 @@ outloopTimes=100;
 [sep_count_TRI3, cover_count_TRI3, width_records_TRI3, LBM_outloop_TRI3] = CZ_BootstrapCR(2, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
 toc; % it took 2764 seconds
 sum(sep_count_TRI3) 
-% rng(2) -> [100 99 100]
+% Coverage Probability:
+% rng(2) -> [100 99 100] ./ 100
 cover_count_TRI3 / outloopTimes % rng(2) -> 0.99
 [mean(width_records_TRI3)./nt; std(width_records_TRI3)]
 %          0    0.2623    0.0638
@@ -668,8 +672,9 @@ outloopTimes=100;
 [sep_count_TRI4, cover_count_TRI4, width_records_TRI4, LBM_outloop_TRI4] = CZ_BootstrapCR(99, m_star_sep, m_star_s1, m_star_s2, TRI, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 100, 1, 1, 2, 3.7, 0, outloopTimes) ;
 toc; % it took 10587 seconds
 sum(sep_count_TRI4) 
-% seed 100: [100 99 100] 
-% seed 12: [100 99 100]
+% Coverage Probability:
+% seed 100: [100 99 100] ./ 100
+% seed 12: [100 99 100] ./ 100
 cover_count_TRI4 / outloopTimes
 [mean(width_records_TRI4)./nt; std(width_records_TRI4)]
 %          0    0.3556    0.0663
@@ -986,7 +991,7 @@ summary_T = [string('Metric') string('Func') 'Optimized h' 'Denser TRI' 'Sparser
     'ISE_SCAD' string('F_1') str_ise_scad(1) str_ise_scad(4) str_ise_scad(7) str_ise_scad(10);...
     'ISE_SCAD' string('F_2') str_ise_scad(2) str_ise_scad(5) str_ise_scad(8) str_ise_scad(11);...
     'ISE_SCAD' string('F_3') str_ise_scad(3) str_ise_scad(6) str_ise_scad(9) str_ise_scad(12);];
-summary_T
+summary_T 
 % content of summary_T:
 %     "Metric"       "Func"    "Oprimized h"        "Denser TRI"         "Sparser TRI"        "Uniform"        
 %     "P_e"          "F_1"     "0.0000 (0.0000)"    "0.0007 (0.0066)"    "0.0000 (0.0000)"    "0.0133 (0.0126)"

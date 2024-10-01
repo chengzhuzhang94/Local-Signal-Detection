@@ -1,3 +1,7 @@
+% Guide
+
+% Part I: calculate optimized TRI for each sample size
+% Part II: repeat data generation and fitting to get summary table of P_e and ISE
 
 % Define the irregular region
 bcr27_boundary = [-88.90,-90.31,-90.10,-92.10,-83.15,-81.30,-80.90,-75.20,-76.31,-77.40,-78.1,-85.46,-87.57,-88.03;...
@@ -23,8 +27,8 @@ grid_S = grid_S(grid_idx); grid_T = grid_T(grid_idx);
 grid_f0 = f0(grid_S, grid_T); grid_f1 = f1(grid_S, grid_T); grid_f2 = f2(grid_S, grid_T); sprintf('We have %d grid points totally', length(grid_S))
 grid_f0_zeroidx = find(grid_f0 == 0); grid_f1_zeroidx = find(grid_f1 == 0); grid_f2_zeroidx = find(grid_f2 == 0); 
 
-%% Best h value 
-n_choice = [2000, 5000, 8000]; % 
+%% Part I: Best h value 
+n_choice = [2000, 5000, 8000];
 h_choice = 2.4:0.1:3; 
 bic_records = zeros(length(n_choice), length(h_choice));
 
@@ -77,7 +81,7 @@ end
 [~, argmin] = min(bic_records(1:3, :), [], 2); h_choice(argmin) % This result is [2.9, 2.9, 2.9] (seed 11)
 toc; % running time: 9 seconds
 
-%% Generate Summary Table of P_e and ISE
+%% Part II: Generate Summary Table of P_e and ISE
 
 kLoopTime = 100; % set up number of loops
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
@@ -279,5 +283,4 @@ end
 % This code chunk generates Fig - Binary Response Simulation Estimated Zero Regions
 
 
-%% Appendix
 

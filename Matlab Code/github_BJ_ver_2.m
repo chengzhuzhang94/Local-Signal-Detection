@@ -219,8 +219,6 @@ end
 % This generates Fig - BJ TRI and Districts
 
 tic;
-% stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
-% stepAIC_DM = table2array(stepAIC_DM); size(stepAIC_DM); stepAIC_DM = stepAIC_DM(valid_id,:);
 
 mat_D = stepAIC_DM(train_id,:); 
 train_mat_D = mat_D; train_mat_Z = mat_Z; train_responses = totalPrice_log_std(train_id); temp_df = df(train_id,:);

@@ -6,7 +6,7 @@ kLoopTime = 100; % alternative value is 300. We repeat estimation multiple times
 f = @(x,y) sqrt((x-0.5).^2 + (y-0.5).^2); fd = @(p) ddiff(drectangle(p, 0, 2, 0, 2), dcircle(p, 1, 1, 0.5)); fh=@(p) 1+4*dcircle(p,1,1,0.5);
 f1 = @(x,y) -1.* sin(2.*pi./(sqrt(2)-0.5) .* (sqrt((x-1).^2+(y-1).^2)-0.5))-1.5; 
 f2 = @(x,y) 2.* (exp((y-1).* (y>=1)) - 1) + 1.5 .* (sqrt((x-1).^2+(y-1).^2) -0.5).*(y>=1); 
-f3 = @(x,y) 0 .* y; % This config has VAR as 4.2 
+f3 = @(x,y) 0 .* y; 
 
 % Generate grids. They fall in [0, 2]x[0, 2] but not falling into the central circle
 grid_len = 200;
@@ -317,8 +317,6 @@ for i=1:length(n_choice)
         mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
         [b_hat dev stats] = glmfit(mat_Z, Z, 'poisson', 'link', 'log', 'constant', 'off');
         
-
-
     end
     toc;
 end
@@ -329,7 +327,7 @@ record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3);
 n_choice = [500, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
 rng(1111);
 for i=1:length(n_choice)
-    tic;
+    tic; % record running time for each n from n_choice
     n = n_choice(i); n_buffer = n+500;
     rng(1100) ;h_now = best_h_values(i);  
     if (h_now == 0.17) 
@@ -343,6 +341,7 @@ for i=1:length(n_choice)
     
     disp(['The experiment of n:', num2str(n), ' started'])
     for j=1:1
+        % generate 1-time data points (so j only equals 1)
         temp_no = 1; X = zeros(n_buffer, 1); Y = zeros(n_buffer, 1); 
         while(temp_no <= n_buffer) 
             temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
