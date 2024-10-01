@@ -99,7 +99,7 @@ However, we made some changes on the raw dataset, which mainly is about adding i
 
 There are three CSV files in the before-mentioned Kaggle dataset address, which need to be downloaded to current working directory as sourcing datasets. Specifically, they are
 
-* `new BJ house.csv`: this CSV file is the raw source dataset I got from Kaggle dataset. This dataset contains 293,963 data points and 28 columns. In the Matlab code, only column 3 (long) and column 4 (lat) are necessary. The location information is used to determine whether the house falls into the manual crafted triangulation. Only valid data points are kept for down-streaming fitting. The detailed list of column names is contained in the second line of the Matlab script `github_BJ.m`.
+* `new BJ house.csv`: this CSV file is the raw source dataset I got from Kaggle dataset. This dataset contains 293,963 data points and 28 columns. In the Matlab code, only column 3 (long) and column 4 (lat) are necessary. The location information is used to determine whether the house falls into the manual crafted triangulation. Only valid data points are kept for down-streaming fitting. The detailed list of column names is contained in the second line of the Matlab script `github_BJ_ver_2.m`.
 
 * `new BJ stepAIC design matrix.csv`: this CSV file is transformed from `new BJ house.csv`, which contains all variables including raw variables and interaction of raw variables. They are picked via AIC and stepwise selection method from the entire set consists of all main effects and interactions of all covariates. This step is implemented in R studio (but not added to the current folder). You can check the first row of this CSV file to know what it represents. The first column is called “intercept” and would always be 1.
 
@@ -119,7 +119,7 @@ The main code script is `github_Poisson_simulation.m` which can be found in the 
 
 ## Beijing Housing Price Application
 
-The main code script is `github_BJ_ver_2.m` which contains fitting for cross-validation part. The scatterplot and summary table of 5-fold cross-validation are generated in this script. Furthermore, we included another file `github_BJ_explore.m` which contains the early stage exploration we made about the Beijing housing price dataset. It includes exploration of the raw dataset and the fitting results from standardized dataset and district-specific linear regression.
+The main code script is `github_BJ_ver_2.m` which contains fitting for cross-validation part. The scatterplot and summary table of 5-fold cross-validation are generated in this script. Furthermore, we included another file `github_BJ_explore.m` which contains the early stage exploration we made about the Beijing housing price dataset. It includes exploration of the raw dataset and the fitting results from standardized dataset and district-specific linear regression. But this script does not lead any results in main paper directly. You can skip it if you only want to reproduce paper results.
 
 # Helper function list
 
