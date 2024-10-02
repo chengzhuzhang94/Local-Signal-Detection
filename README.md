@@ -119,7 +119,7 @@ The main code script is `github_Poisson_simulation.m` which can be found in the 
 
 ## Beijing Housing Price Application
 
-The main code script is `github_BJ_ver_2.m` which contains fitting for cross-validation part. The scatterplot and summary table of 5-fold cross-validation are generated in this script. Furthermore, we included another file `github_BJ_explore.m` which contains the early stage exploration we made about the Beijing housing price dataset. It includes exploration of the raw dataset and the fitting results from standardized dataset and district-specific linear regression. But this script does not lead any results in main paper directly. You can skip it if you only want to reproduce paper results.
+The main code script is `github_BJ_ver_2.m` which contains fitting for cross-validation part, district-wise linear regression, and visualization of triangulation and estimated varying coefficients. The scatterplot and summary table of 5-fold cross-validation are generated in this script.
 
 # Helper function list
 
