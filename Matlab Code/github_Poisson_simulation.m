@@ -43,7 +43,7 @@ end
 rng(1100);
 [p,TRI] = distmesh2d(fd, fh, 0.19, [0,0;2,2], [0,0;0,2;2,0;2,2]);
 
-n_choice = [500, 2000, 5000]; 
+n_choice = [1000, 2000, 5000]; 
 h_choice = 0.17:0.01:0.23; 
 bic_records = zeros(m+1, length(h_choice));
 
@@ -100,14 +100,14 @@ for i=1:length(n_choice)
     disp(['The best h value is ', num2str(h_choice(argmin))])
 end
 [~, argmin] = min(bic_records(1:3, :), [], 2); h_choice(argmin)
-% best h_choice for n=[500, 2000, 5000] is [0.21, 0.21, 0.21] with rng(11)
+% best h_choice for n=[1000, 2000, 5000] is [0.21, 0.21, 0.21] with rng(11)
 
 %% Experiments for each sample size
 tic; 
 kLoopTime = 100;
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-n_choice = [500, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
-rng(1111);
+n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
+curr_seed=1111;
 for i=1:length(n_choice)
     
     % Section: generating TRI based on the best h, which was got above
@@ -122,6 +122,7 @@ for i=1:length(n_choice)
         vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
     nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
     
+    rng(curr_seed);
     disp(['The experiment of n:', num2str(n), ' started'])
     for j=1:kLoopTime
         if rem(j, 10) == 1
@@ -241,29 +242,31 @@ for i=1:length(n_choice)
     end
 end
 
-toc; % running time 1472 seconds
+toc; % running time 1567 seconds
 
 % Display the mean and median as the final summary table
 str = zeros(27,1); str = string(str);
 for i = 1:27
    str(i) = sprintf('%.4f (%.4f)', mean(record_table(:, i)), std(record_table(:, i))) ;
 end
-summary_T = [string('n') string('F') string('P_e') string('ISE_SCAD') string('ISE_UNPEN'); '500' 'F1' str(1) str(4) str(7);'2000' 'F1' str(2) str(5) str(8);'5000' 'F1' str(3) str(6) str(9);...
-    '500' 'F2' str(10) str(13) str(16);'2000' 'F2' str(11) str(14) str(17);'5000' 'F2' str(12) str(15) str(18);...
-    '500' 'F3' str(19) str(22) str(25);'2000' 'F3' str(20) str(23) str(26);'5000' 'F3' str(21) str(24) str(27);];
+summary_T = [string('n') string('F') string('P_e') string('ISE_SCAD') string('ISE_UNPEN'); ...
+    '1000' 'F1' str(1) str(4) str(7);'2000' 'F1' str(2) str(5) str(8);'5000' 'F1' str(3) str(6) str(9);...
+    '1000' 'F2' str(10) str(13) str(16);'2000' 'F2' str(11) str(14) str(17);'5000' 'F2' str(12) str(15) str(18);...
+    '1000' 'F3' str(19) str(22) str(25);'2000' 'F3' str(20) str(23) str(26);'5000' 'F3' str(21) str(24) str(27);];
 summary_T
 
 
-% Trial Result: rng(1111)
-%     "500"     "F1"    "0.2333 (0.1493)"    "11.0099 (56.3582)"    "10.0418 (56.5483)"
-%     "2000"    "F1"    "0.0000 (0.0000)"    "0.4243 (0.1216)"      "0.4895 (0.1559)"  
-%     "5000"    "F1"    "0.0000 (0.0000)"    "0.2299 (0.0538)"      "0.2612 (0.0709)"  
-%     "500"     "F2"    "0.3028 (0.0982)"    "2.3800 (2.9808)"      "2.7817 (2.3869)"  
-%     "2000"    "F2"    "0.2393 (0.0741)"    "0.1555 (0.0904)"      "0.2564 (0.1071)"  
-%     "5000"    "F2"    "0.2648 (0.0769)"    "0.0658 (0.0388)"      "0.1003 (0.0400)"  
-%     "500"     "F3"    "0.2164 (0.1596)"    "1.5931 (2.7418)"      "2.7509 (2.8164)"  
-%     "2000"    "F3"    "0.1126 (0.1184)"    "0.0761 (0.0943)"      "0.2824 (0.1185)"  
-%     "5000"    "F3"    "0.0887 (0.1127)"    "0.0163 (0.0257)"      "0.0965 (0.0377)"  
+% Trial Result: rng(1100) (previous default seed)
+%     "n"       "F"     "P_e"                "ISE_SCAD"           "ISE_UNPEN"      
+%     "1000"    "F1"    "0.0502 (0.0765)"    "1.2018 (0.7396)"    "1.1537 (0.5871)"
+%     "2000"    "F1"    "0.0000 (0.0000)"    "0.4243 (0.1216)"    "0.4895 (0.1559)"
+%     "5000"    "F1"    "0.0000 (0.0000)"    "0.2299 (0.0538)"    "0.2612 (0.0709)"
+%     "1000"    "F2"    "0.2539 (0.0829)"    "0.4721 (0.3737)"    "0.7304 (0.3952)"
+%     "2000"    "F2"    "0.2393 (0.0741)"    "0.1555 (0.0904)"    "0.2564 (0.1071)"
+%     "5000"    "F2"    "0.2648 (0.0769)"    "0.0658 (0.0388)"    "0.1003 (0.0400)"
+%     "1000"    "F3"    "0.1429 (0.1238)"    "0.2606 (0.3198)"    "0.6573 (0.3416)"
+%     "2000"    "F3"    "0.1126 (0.1184)"    "0.0761 (0.0943)"    "0.2824 (0.1185)"
+%     "5000"    "F3"    "0.0887 (0.1127)"    "0.0163 (0.0257)"    "0.0965 (0.0377)"
 
 
 %% Time check
@@ -274,7 +277,7 @@ summary_T
 
 kLoopTime = 10;
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-n_choice = [500, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
+n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
 rng(1111);
 for i=1:length(n_choice)
     tic;
@@ -324,7 +327,7 @@ end
 % SCAD Tuning and One rep
 kLoopTime = 10;
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-n_choice = [500, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
+n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
 rng(1111);
 for i=1:length(n_choice)
     tic; % record running time for each n from n_choice
