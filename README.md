@@ -23,7 +23,7 @@ both simulation cases and real data analysis.
 
 In this Markdown file, we provide some information related to reproducibility, which mainly covers functionality of each Matlab code script and what plots they would generate.
 
-Because of the file size limit (25MB) on GitHub, we upload our real analysis dataset (Beijing Housing Price) to Kaggle (https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia). You need to click through this Kaggle link and download CSV files to your current working directory. For more details, please check the section [**Dataset Access**](#dataset-access)
+Because of the file size limit (25MB) on GitHub, we upload our real analysis dataset (Beijing Housing Price) to Kaggle (https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia). You need to click through this Kaggle link and download CSV files to your current working directory. For more details, please check the section [**Dataset Access**](#dataset-access).
 
 # Requirement
 
@@ -34,6 +34,8 @@ Our Matlab version and computation environment are listed as below
 **CPU**: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz 2.59 GHz
 
 **Ram**: 16 GB
+
+We found that if we use different versions of Matlab (e.g., R2022b, R2023a), the results of continuous response simulation could be different for the sample size n=1000.
 
 # File Overview
 
@@ -93,9 +95,9 @@ For practical application
 
 # Dataset Access
 
-We use a Beijing housing price dataset for practical application. The raw dataset source is: https://www.kaggle.com/datasets/ruiqurm/lianjia
+We use a Beijing housing price dataset for practical application. The raw dataset source is: https://www.kaggle.com/datasets/ruiqurm/lianjia.
 
-However, we made some changes on the raw dataset, which mainly is about adding interaction of variables and implement standardization. Because github has a limit of file size, so we upload dataset files to a public Kaggle dataset address: https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia
+However, we made some changes on the raw dataset, which mainly is about adding interaction of variables and implement standardization. Because github has a limit of file size, so we upload dataset files to a public Kaggle dataset address: https://www.kaggle.com/datasets/chengzhuzhang/transformed-beijing-housing-price-from-lianjia.
 
 There are three CSV files in the before-mentioned Kaggle dataset address, which need to be downloaded to current working directory as sourcing datasets. Specifically, they are
 
@@ -123,9 +125,11 @@ The main code script is `github_BJ_ver_2.m` which contains fitting for cross-val
 
 # Helper function list
 
-Besides main Matlab scripts that are mentioned above, you also need other helper functions which serves some basis functions related to Triangulation. For example, we directly use the function provided by Larry L. Schumaker ([His webpage](https://math.vanderbilt.edu/schumake/)) to generate triangulation. We list them and associated resources as below
+Besides main Matlab scripts that are mentioned above, you also need other helper functions which serves some basis functions related to Triangulation. For example, we directly use the function provided by Larry L. Schumaker ([His webpage](https://math.vanderbilt.edu/schumake/)) to generate triangulation. Some functions are from the "**Download**" section (choose the current version 1.1) on the [DistMesh - A Simple Mesh Generator in MATLAB](http://persson.berkeley.edu/distmesh/). We list them and associated resources as below
 
-- basic helper functions from Larry L. Schumaker: `basis.p`, `choose.p`, `getindex.p`, `trilists.p`, `dcircle.m`, `ddiff.m`, `distmesh2d.m`, `drectangle.m`, `fixmesh.m`, `getindex.p`, `huniform.m`, `simpplot.m`, `simpvol.m`, `trilists.p`
+- basic DistMesh functions (version 1.1) are: `dploy.m`, `dcircle.m`, `ddiff.m`, `distmesh2d.m`, `drectangle.m`, `fixmesh.m`, `huniform.m`, `simpplot.m`, `simpvol.m`
+
+- basic helper functions from Larry L. Schumaker (Appendix Code of this book [Spline Functions: Computational Methods](https://epubs.siam.org/doi/10.1137/1.9781611973907)): `basis.p`, `choose.p`, `getindex.p`, `trilists.p`,  `getindex.p`, `trilists.p`
 
 - `CZ_SPL_est.m`: created by Chengzhu Zhang, which takes a list of location (X, Y) and Triangulation information as input. The output contains two parts. The first output is values of associated Bernstein basis polynomials of degree d, while the second output is the list of order numbers indicating valid points that fall into the Triangulation. More details can be found in the comments contained in the file.
 
