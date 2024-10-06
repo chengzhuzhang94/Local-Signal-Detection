@@ -14,239 +14,97 @@ f1 = @(x,y) 1.* sin(2.*pi./(sqrt(2)-0.5) .* (sqrt((x-1).^2+(y-1).^2)-0.5))+1; f2
 
 % Part 0: Generate optimized TRI for all sample sizes
 
-% generate TRI for each h value. h is a hyperparameter used in the function
-% distmesh2d()
-h_opt = 0.13:0.01:0.21;
-for j = 1:length(h_opt)
-    rng(1000); % Set seed to make sure the generated triangulations are identical
-    h_now = h_opt(j); 
-    disp(h_now)
-    [p,TRI] = distmesh2d(fd, fh, h_now, [0,0;2,2], [0,0;0,2;2,0;2,2]);
-    % You need to output some Triangulations manually for later repeated use
-    if abs(h_now - 0.17) < 0.001
-        p17 = p; TRI17 = TRI;
-    end   
-    if abs(h_now - 0.18) < 0.001
-        p18 = p; TRI18 = TRI;
-    end 
-    if abs(h_now - 0.19) < 0.001
-        p19 = p; TRI19 = TRI;
-    end 
-end
+% copy and past TRI information when h value is 0.17
 
-% In total, we have 4 different sample sizes
-n_choice = [500, 1000, 2000, 5000]; 
-h_choice = 0.14:0.01:0.22; 
-m = 3;
-bic_records = zeros(length(n_choice), length(h_choice));
+p17 = [-0.0000    0.9990
+         0         0 
+         0    2.0000
+    0.0000    0.5916
+    0.0000    1.4104
+    0.4366    1.1947
+    0.4447    0.8102
+    0.5000    1.0019
+    0.5119    0.4630
+    0.5185    1.5535
+    0.5988    1.2984
+    0.6093    0.6880
+    0.6958    0.0000
+    0.7363    2.0000
+    0.7432    1.4290
+    0.7709    0.5556
+    0.8834    0.3485
+    0.8846    1.4865
+    0.9876    0.5002
+    1.0386    1.6114
+    1.1737    0.4504
+    1.1915    1.4619
+    1.2594    0.0000
+    1.2883    2.0000
+    1.2957    0.5968
+    1.3353    1.3709
+    1.4202    0.7290
+    1.4469    1.2242
+    1.4963    0.9395
+    1.5199    1.5250
+    1.5275    0.4341
+    1.6200    1.1016
+    1.6202    0.7766
+    2.0000    0.7297
+    2.0000    1.2924
+    2.0000         0
+    2.0000    2.0000];
 
-% sample size: 500
-rng(100);
-for i=1
-    n = n_choice(i);
-    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
-    while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
-        % Use beta distribution to generate locations of data points
-        temp_theta = 2*pi*rand(1);
-        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-        end
-    end
-    % generate response values via defined varying coefficient functions
-    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-    X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
-    Z = X_1.*beta_1 + X_2.*beta_2+X_3.*beta_3+epsilon;
-    ori_Z = Z;
-    
-    for j=1:length(h_choice)
-        % generate Triangulations
-        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
-        if abs(h_choice(j) - 0.17) < 0.0001
-            p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-        else
-            rng(1000);
-            [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-        end 
-              
-        [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-           vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-        nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
-        
-        % Call "CZ_SPL_est" to generate design matrix of Bernstein basis
-        % polynomials
-        [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
-        
-        % To get the final design matrix, we need to multiply covariant
-        % values to Bernstein basis polynomials
-        mat_Z = zeros(n, m*nc);
-        for k = 1:n
-            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-            mat_Z(k,:) = [temp1, temp2, temp3];
-        end
-        full_mat_Z = mat_Z;
-        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-        
-        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
-        
-        % Calculate BIC value
-        bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
-    end
-    disp(['The experiment of n:', num2str(n), ' is finished'])
-    [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
-    disp(['The best h value is ', num2str(h_choice(argmin))])
-end
-[~, argmin] = min(bic_records(1, :), [], 2); h_choice(argmin) % best h choice is 0.21
-
-% sample size: 1000. Similar to the case sample size=500
-rng(200);
-for i=2
-    n = n_choice(i);
-    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
-    while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
-        temp_theta = 2*pi*rand(1);
-        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-        end
-    end
-    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-    X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
-    Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3 + epsilon;
-    ori_Z = Z;
-    
-    for j=1:length(h_choice)
-        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
-        if h_choice(j) == 0.17
-            p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-        else
-            rng(1000);
-            [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-        end 
-              
-        [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-           vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-        nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
-        [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
-        
-        mat_Z = zeros(n, m*nc);
-        for k = 1:n
-            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-            mat_Z(k,:) = [temp1, temp2, temp3];
-        end
-        full_mat_Z = mat_Z;
-        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-        
-        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
-        bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
-    end
-    disp(['The experiment of n:', num2str(n), ' is finished'])
-    [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
-    disp(['The best h value is ', num2str(h_choice(argmin))])
-end
-[~, argmin] = min(bic_records(1:2, :), [], 2); h_choice(argmin) % best h choice is 0.21
-
-% sample size: 2000. Similar to the case sample size=500
-rng(200);
-for i=3
-    n = n_choice(i);
-    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
-    while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
-        temp_theta = 2*pi*rand(1);
-        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-        end
-    end
-    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-    X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
-    Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3 + epsilon;
-    ori_Z = Z;
-    
-    for j=1:length(h_choice)
-        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
-        if h_choice(j) == 0.17
-            p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-        else
-            rng(1000);
-            [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-        end 
-              
-        [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-           vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-        nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
-        [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
-        
-        mat_Z = zeros(n, m*nc);
-        for k = 1:n
-            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-            mat_Z(k,:) = [temp1, temp2, temp3];
-        end
-        full_mat_Z = mat_Z;
-        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-        
-        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
-        bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
-    end
-    disp(['The experiment of n:', num2str(n), ' is finished'])
-    [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
-    disp(['The best h value is ', num2str(h_choice(argmin))])
-end
-[~, argmin] = min(bic_records(1:3, :), [], 2); h_choice(argmin) % best h choice is 0.19
-
-% sample size: 5000. Similar to the case sample size=500
-rng(100);
-for i=4
-    n = n_choice(i);
-    temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points first 
-    while(temp_no <= n)
-        temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); 
-        temp_theta = 2*pi*rand(1);
-        c_x = temp_r * cos(temp_theta) + 1; c_y = temp_r * sin(temp_theta) + 1;
-        if 0 <= c_x && c_x <= 2 && 0<= c_y && c_y <= 2
-            X(temp_no) = c_x; Y(temp_no) = c_y; temp_no = temp_no + 1;
-        end
-    end
-    beta_1 = f1(X,Y); beta_2 = f2(X,Y); beta_3 = f3(X,Y); 
-    X_1 = randn(n,1); X_2 = randn(n,1); X_3 = randn(n,1); epsilon=randn(n, 1);
-    Z = X_1.*beta_1 + X_2.*beta_2 + X_3.*beta_3 + epsilon;
-    ori_Z = Z;
-    
-    for j=1:length(h_choice)
-        disp(['The current n value:', num2str(n), ' the current h value: ', num2str(h_choice(j))])
-        if h_choice(j) == 0.17
-            p = p17; TRI = TRI17; vx = p(:,1); vy = p(:,2);
-        else
-            rng(1000);
-            [p,TRI] = distmesh2d(fd, fh, h_choice(j),[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
-        end 
-              
-        [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
-           vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
-        nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt;
-        [B, valid_id] = CZ_SPL_est(X, Y, vx, vy, TRI,v1,v2,v3,nt,nc,nv,d);
-        
-        mat_Z = zeros(n, m*nc);
-        for k = 1:n
-            temp1 = (B(k, :).* X_1(k,1)); temp2 = (B(k, :).* X_2(k,1)); temp3 = (B(k, :).* X_3(k,1));
-            mat_Z(k,:) = [temp1, temp2, temp3];
-        end
-        full_mat_Z = mat_Z;
-        mat_Z = full_mat_Z(valid_id, :); Z = ori_Z(valid_id, :);
-        
-        b_hat = (transpose(mat_Z) * mat_Z + 6 / (log(length(valid_id))*nt) * eye(m*nc)) \ transpose(mat_Z) * Z;
-        bic_records(i, j) = log(mean((Z - mat_Z * b_hat).^2)) + log(length(valid_id)) * sum(b_hat ~=0) / length(valid_id);
-    end
-    disp(['The experiment of n:', num2str(n), ' is finished'])
-    [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
-    disp(['The best h value is ', num2str(h_choice(argmin))])
-end
-[~, argmin] = min(bic_records(1:4, :), [], 2); h_choice(argmin) % best h choice is 0.17
-
-% Now we get the best h choices are [0.21, 0.21, 0.19, 0.17] for sample sizes [500, 1000, 2000, 5000] respectively
+TRI17 = [
+    36    34    31
+    31    23    36
+    34    35    32
+    33    31    34
+    33    32    29
+    34    32    33
+    23    31    21
+    24    14    20
+    20    14    18
+    10    14     3
+     3     5    10
+    10    18    14
+    15    18    10
+    31    33    27
+    27    33    29
+     2    13     9
+    30    32    35
+    30    35    37
+    37    24    30
+    25    21    31
+    31    27    25
+     2     9     4
+     6     5     1
+     6    10     5
+    32    30    28
+    30    26    28
+    29    32    28
+    20    18    22
+    22    26    30
+    22    24    20
+    22    30    24
+    17     9    13
+    17    13    23
+    23    21    17
+    21    25    19
+    19    17    21
+     1     4     7
+     7     4     9
+     9    12     7
+     8     7    12
+     8     6     1
+     1     7     8
+    17    19    16
+    16    12     9
+     9    17    16
+     6     8    11
+    15    10    11
+    10     6    11    
+];
+% We already get the best h choices are [0.21, 0.21, 0.19, 0.17] for sample sizes [500, 1000, 2000, 5000] respectively
 
 %% Part II: repeat data generation and fitting to get summary table of P_e and ISE
 kLoopTime=100;
@@ -382,6 +240,7 @@ all_TRI = cell(length(n_choice), 1); all_vx = cell(length(n_choice), 1); all_vy 
 all_LBR = cell(length(n_choice), 3); all_UBR = cell(length(n_choice), 3);
 all_wot = zeros(length(n_choice), 3);
 tic;
+curr_seed = 5;
 for i=1:length(n_choice)  % This for loop is for fitting
     n = n_choice(i); h_now = best_h_choices(i);
     if (h_now == 0.17) 
@@ -396,7 +255,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
     nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
     all_grid_B{i, 1} = grid_B; all_grid_valid_id{i, 1} = grid_valid_id;
     
-    rng(5); % set seed before generating data points
+    rng(curr_seed); % set seed before generating data points
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); % Generate points here
     while(temp_no <= n)
         temp_r = 0.5 + betarnd(1,3,1,1) * (sqrt(2)-0.5); % Use beta distribution to generate observations
