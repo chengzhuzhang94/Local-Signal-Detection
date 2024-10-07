@@ -721,11 +721,14 @@ diag_lamb_vec = zeros(kLoopTime, 1);
 
 % Triangulation 1: optimized via BIC: h=0.19, nt=32, nc=28
 rng(1000); % set seed!
+
+% calling distmesh2d() would also plot triangulation: TRI-BIC.jpg
 [p,TRI] = distmesh2d(fd,fh,0.19,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
 nv = length(vx); d = 1; nc = nv + (d-1)*ne + choose(d-1,2)*nt; 
 [grid_B, grid_valid_id] = CZ_SPL_est(grid_S, grid_T, vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
+
 rng(111);
 for i=1:kLoopTime
     temp_no = 1; X = zeros(n, 1); Y = zeros(n, 1); 
@@ -788,6 +791,8 @@ end
 
 % Triangulation 2: more triangles, h=0.14, nt=81, nc=59
 rng(1000);
+
+% calling distmesh2d() would also plot triangulation: TRI-DEN.jpg
 [p,TRI] = distmesh2d(fd,fh,0.14,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
@@ -857,6 +862,8 @@ end
 
 % Triangulation 3: few triangles, h=0.38, nt=13, nc=13
 rng(1000);
+
+% calling distmesh2d() would also plot triangulation: TRI-SPARSE.jpg
 [p,TRI] = distmesh2d(fd,fh,0.38,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
@@ -926,6 +933,8 @@ end
 
 % Triangulation 4: Uniform distributed, nt=32 (same as the TRI 1), nc=29
 rng(1000);
+
+% calling distmesh2d() would also plot triangulation: TRI-UNIF.jpg
 [p,TRI] = distmesh2d(fd,@huniform,0.39,[0,0;2,2],[0,0;0,2;2,0;2,2]); vx = p(:,1); vy = p(:,2);
 [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
     vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
