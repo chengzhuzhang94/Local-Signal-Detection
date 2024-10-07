@@ -282,6 +282,20 @@ toc; % running time was 7 seconds
 %p-value      0.36133          0.33628      0.63175     5.283e-21   0.069686    0.0001      6.0194e-07   3.572e-42     8.2965e-12
 
 
+% The re-ordered rounded table is displayed as below (we just change the layout of the output and only keep records
+% that are used in the paper)
+
+%             Xi Cheng      Dong Cheng    Tong Zhou   Chao Yang   Da Xing   Feng Tai    Shi Jing Shan  Hai Dian    Chang Ping
+%tradeTime     0.625           0.898        1.049        0.751      0.851      0.741        0.607        0.577        0.635
+%p-value      < 0.01          < 0.01       < 0.01       < 0.01     < 0.01     < 0.01       < 0.01       < 0.01       < 0.01
+
+%followers     0.016          -0.028        0.074        -0.010     0.029      0.003        0.084        0.040        0.018
+%p-value       0.824           0.566       < 0.01        0.115      0.016      0.793       < 0.01       < 0.01        0.050
+
+%elevator      0.806          -0.093        0.265        0.359      0.392      0.171        0.149        0.502        0.465
+%p-value      < 0.01           0.519       < 0.01       < 0.01     < 0.01     < 0.01        0.052       < 0.01       < 0.01
+
+
 %% Part V: Visualization of Triangulation and Estimated Varying Coefficient
 % Estimated Zero Region, LBR and UBR
 % stepAIC_DM = readtable('new BJ stepAIC design matrix.csv'); stepAIC_col_names = stepAIC_DM.Properties.VariableNames; stepAIC_col_names(1)={'x_Intercept'};
