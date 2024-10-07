@@ -214,8 +214,9 @@ for i=[37,26,7,28,29]
    fill(vx(TRI(i,:)), vy(TRI(i,:)), 'y');
 end
 for i=[21,35,36,34,32]
-   fill(vx(TRI(i,:)), vy(TRI(i,:)), [0 0 0.5]);
+   fill(vx(TRI(i,:)), vy(TRI(i,:)), [0 0 1]);
 end
+hold off;
 % This generates Fig - BJ TRI and Districts
 
 tic;
