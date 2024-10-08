@@ -41,6 +41,14 @@ h_choice = 0.14:0.01:0.22;
 m = 3;
 bic_records = zeros(length(n_choice), length(h_choice));
 
+%% Attention:
+% The below comment section is used to get optimized TRI for each sample size, which can be run in R2018a. 
+% But, if you use another version of Matlab, it might cause some issues when you run this code line: 
+% -----------------------------------------------------------------------
+% `[p,TRI] = distmesh2d(fd, fh, 0.17, [0,0;2,2], [0,0;0,2;2,0;2,2]);`
+% -----------------------------------------------------------------------
+% For this case when h=0.17, we manually provide triangulation information and stored as "p17" and "TRI17"
+
 % sample size: 500
 % rng(100);
 % for i=1
