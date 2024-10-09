@@ -3,6 +3,14 @@
 % Part I: calculate optimized TRI for each sample size
 % Part II: repeat data generation and fitting to get summary table of P_e and ISE
 
+% You only need to check these 3 variables
+% summary_T, all_wot, summary_coverage_prob
+
+% For coverage probability, you can change these 2 variables: outloopTimes, bootstraploopTimes
+% outloopTimes: in total how many rounds we have. For each round, we would check whether the true zero regions are contained by LBR & UBR
+% bootstraploopTimes: in each round, how many bootstrap datasets are generated and used to calculate LBR & UBR
+% Both variables are 100 for continuous simulation, but using 100 for both for logistic regression is too time-consuming
+
 % Define the irregular region
 bcr27_boundary = [-88.90,-90.31,-90.10,-92.10,-83.15,-81.30,-80.90,-75.20,-76.31,-77.40,-78.1,-85.46,-87.57,-88.03;...
     37.20,35.06,33.49,30.64,29.33,30.00,31.80,35.40,38,38.42,35.909,32.61,33.35,36.67]; % First row is longitude while second row is latitude
@@ -174,18 +182,7 @@ summary_T = [string('n') string('F') string('P_e') string('ISE_SCAD') string('IS
     '3000' 'F3' str(19) str(22) str(25); '5000' 'F3' str(20) str(23) str(26); '8000' 'F3' str(21) str(24) str(27);];
 summary_T
 
-% curr_seed=11
-%     "n"       "F"     "P_e"                "ISE_SCAD"           "ISE_UNPEN"      
-%     "2000"    "F1"    "0.0269 (0.0409)"    "1.9300 (3.4717)"    "1.9327 (4.2277)"
-%     "5000"    "F1"    "0.0040 (0.0123)"    "0.3714 (0.1583)"    "0.4472 (0.1477)"
-%     "8000"    "F1"    "0.0003 (0.0026)"    "0.1896 (0.0652)"    "0.2447 (0.0868)"
-%     "2000"    "F2"    "0.2776 (0.1048)"    "2.8050 (2.7683)"    "2.7600 (3.2893)"
-%     "5000"    "F2"    "0.2529 (0.0945)"    "0.7708 (0.4155)"    "0.7186 (0.2431)"
-%     "8000"    "F2"    "0.2329 (0.0719)"    "0.4155 (0.1512)"    "0.3834 (0.1284)"
-%     "2000"    "F3"    "0.4480 (0.1968)"    "1.8098 (1.6622)"    "2.0312 (1.4746)"
-%     "5000"    "F3"    "0.1201 (0.0980)"    "0.1953 (0.2272)"    "0.6124 (0.2070)"
-%     "8000"    "F3"    "0.0462 (0.0801)"    "0.0503 (0.0889)"    "0.3109 (0.1061)"
-    
+
 % curr_seed=11
 %     "n"       "F"     "P_e"                "ISE_SCAD"           "ISE_UNPEN"      
 %     "3000"    "F1"    "0.0128 (0.0218)"    "0.7722 (0.3906)"    "0.8178 (0.3452)"
@@ -302,7 +299,7 @@ all_TRI = cell(length(n_choice), 1); all_vx = cell(length(n_choice), 1); all_vy 
 all_LBR = cell(length(n_choice), 3); all_UBR = cell(length(n_choice), 3);
 all_wot = zeros(length(n_choice), 3);
 tic;
-curr_seed=5;
+curr_seed=5; bootstraploopTimes = 40;
 for i=1:length(n_choice)  % This for loop is for fitting
     n = n_choice(i); h_now = best_h_choices(i);
     
@@ -363,7 +360,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
       
     all_p_b_hat{i,1} = p_b_hat;
     disp(['The Bootstrap part of n:', num2str(n), ' started!'])
-    [records, lambda_records] = CZ_bootstrap_logic_nested(2, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, 40, 1, 0, lam_vec(temp_index));
+    [records, lambda_records] = CZ_bootstrap_logic_nested(2, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, lam_vec(temp_index));
     MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
     for j = 1:m
        TRI_no = 1+(j-1)*nt:j*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
@@ -388,34 +385,17 @@ end
 toc; 
 all_wot
 
-
-% rng(11): running time 267 seconds
-%     0.6842    0.8421    1.0000
-%     0.1579    0.6316    1.0000
-%     0.1579    0.4737    0.7895
-
-% rng(5) sample size 2000
-%     0.2105    0.5789    1.0000
-%     0.1579    0.6316    1.0000
-%          0    0.5263    0.8947
-
-% rng(5), sample size: 3000, 5000, 8000
-
-%     0.1579    0.5263    1.0000
-%     0.1579    0.6316    1.0000
-%          0    0.5263    0.8947
-
-% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), inner 100 times, running time 2356 seconds
+% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), bootstraploopTimes = 100 , running time 2356 seconds
 %     0.3158    0.6842    1.0000
 %     0.1579    0.6316    0.9474
 %          0    0.5263    0.7895
 
-% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), inner 20 times, running time 425 seconds
+% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), bootstraploopTimes = 20 , running time 425 seconds
 %     0.2105    0.6316    1.0000
 %     0.1053    0.6842    0.9474
 %     0.0526    0.3684    0.7368
 
-% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), inner 40 times, running time 828 seconds
+% rng(5), sample sizes [3k 5k 8k], lambda linspace(0.6, 0.9, 7), options (1, 0), bootstraploopTimes = 40 , running time 828 seconds
 %     0.3158    0.6316    1.0000
 %     0.1579    0.6316    0.8421
 %          0    0.4737    0.5789
@@ -483,14 +463,11 @@ m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
-tic; outloopTimes=100;
-[sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR_logistic(100, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, 40, 1, 0, 2, outloopTimes) ;
+tic; outloopTimes=50; bootstraploopTimes = 40;
+[sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR_logistic(100, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes) ;
 toc; % it took 1467 seconds
 sum(sep_count_TRI1) 
 
-
-cover_count_TRI1 / outloopTimes 
-[mean(width_records_TRI1)./nt; std(width_records_TRI1)]
 
 %% sample size: 5000
 i = 2; n = n_choice(i); h_now = best_h_choices(i);
@@ -511,7 +488,7 @@ m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
-tic; outloopTimes=50; bootstraploopTimes = 20;
+tic; outloopTimes=50; bootstraploopTimes = 40;
 [sep_count_TRI2, cover_count_TRI2, width_records_TRI2, LBM_outloop_TRI2] = CZ_BootstrapCR_logistic(2, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes) ;
 toc; % it took  seconds
 sum(sep_count_TRI2) %
@@ -539,12 +516,12 @@ m_star_sep = cell(3,1); m_star_sep{1,1} = []; m_star_sep{2,1} = []; m_star_sep{3
 m_star_s1 = m_star_sep; m_star_s1{2, 1} = m_star_high;
 m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
-tic; outloopTimes=50; bootstraploopTimes = 20;
+tic; outloopTimes=50; bootstraploopTimes = 40;
 [sep_count_TRI3, cover_count_TRI3, width_records_TRI3, LBM_outloop_TRI3] = CZ_BootstrapCR_logistic(2, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes) ;
-toc; % it took 5500 seconds
+toc; 
 sum(sep_count_TRI3) 
 % rng(2) looptimes [20 Out, 20 Inner Boots], [20 19 20]/20
-% rng(2) looptimes [50 Out, 20 Inner], [50 49 50] ./ 50, running time 14113 seconds
+% rng(2) looptimes [50 Out, 20 Inner Boots], [50 49 50] ./ 50, running time 14113 seconds
 cover_count_TRI3 ./ outloopTimes 
 [mean(width_records_TRI3)./nt; std(width_records_TRI3)]
 
