@@ -1,4 +1,4 @@
-function [sep_count, cover_count, width_records, LBM_outloop] = CZ_BootstrapCR_logistic(seed, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, option1, option2, optionLU, outloopTimes)
+function [sep_count, cover_count, width_records, LBM_outloop] = CZ_BootstrapCR_logistic(seed, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, option1, option2, optionLU, outloopTimes, boots_lam_vec)
 % Purpose:
 % This function calculate coverage probability for binary response
 % simulation
@@ -54,7 +54,7 @@ for outloop=1:outloopTimes
   mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id); %fprintf('Actual training design matrix size: %d * %d\n', size(mat_Z));
   [b_hat dev stats] = glmfit(mat_Z, Z, 'binomial', 'link', 'logit', 'constant', 'off'); % Default iteration times is 100
  
-    nlam = 20; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.05, 1, nlam);
+    nlam = 14; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.35, 1, nlam);
       % Use BIC again to detect the best lambda value
       bic = zeros(nlam, 3); converged_or_not = zeros(nlam, 1);
       for q = 1:nlam         
@@ -73,7 +73,7 @@ for outloop=1:outloopTimes
     
     % call another function to implement Bootstrapping to get MCR
     disp(['The Bootstrap of iteration: ', num2str(outloop), '-th inner loop started'])
-    [records, lambda_records] = CZ_bootstrap_logic_nested(2, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, option1, option2, lam_vec(temp_index));
+    [records, lambda_records] = CZ_bootstrap_logic_nested(2, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, option1, option2, lam_vec(temp_index), boots_lam_vec);
     
     MCR_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
     for i = 1:m

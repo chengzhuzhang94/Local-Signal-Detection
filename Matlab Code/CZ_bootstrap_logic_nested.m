@@ -1,4 +1,4 @@
-function [records, lambda_records] = CZ_bootstrap_logic_nested(seed, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, bootstrap_opt, lambda_opt, optimized_lambda)
+function [records, lambda_records] = CZ_bootstrap_logic_nested(seed, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, kLoopTime, bootstrap_opt, lambda_opt, optimized_lambda, lam_vec)
 % It's used in the nested loop of the function `CZ_bootstrap_logic`
 % Suppose we already have: mat_Z, Z, b_hat, p_b_hat
 
@@ -26,7 +26,7 @@ if bootstrap_opt==1
             
         elseif lambda_opt == 0
             % This option would find the optimized lambda
-            nlam = 7; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.6, 0.9, nlam);
+            nlam = length(lam_vec);
             bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
             for q = 1:nlam
                 [p_b_hat, dist_logical, probs, first_deri_l, second_deri_l, Dgn, accuracy_record] = update_p_b_hat_logistic_NoC(...
@@ -106,7 +106,7 @@ if bootstrap_opt==3
             
         elseif lambda_opt == 0
             % This option would find the optimized lambda
-            nlam = 8; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.55, 0.9, nlam);
+            nlam = length(lam_vec);
             bic = zeros(nlam, 1); converged_or_not = zeros(nlam, 1);
             for q = 1:nlam
                 [p_b_hat, dist_logical, probs, first_deri_l, second_deri_l, Dgn, accuracy_record] = update_p_b_hat_logistic_NoC(...
