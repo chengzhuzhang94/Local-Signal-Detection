@@ -98,7 +98,7 @@ best_h_values = [2.9, 2.9, 2.9];
 tic; 
 curr_seed = 11;
 for i=1:length(n_choice)
-    n = n_choice(i); h_now = h_choice(i); 
+    n = n_choice(i); h_now = best_h_values(i); 
     rng(22); [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
 
     [nb,ne,nt,v1,v2,v3,e1,e2,e3,ie1,ie2,tril,trir,bdy,...
@@ -205,7 +205,7 @@ all_mat_Z = cell(length(n_choice), 3); all_Z = cell(length(n_choice), 3);
 
 curr_seed=103; % other candidate seeds: 2
 for i=1:length(n_choice)  % This for loop is for fitting
-    n = n_choice(i); h_now = best_h_choices(i);
+    n = n_choice(i); h_now = best_h_values(i);
     
     % Generate TRI first
     rng(22); [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
@@ -300,7 +300,7 @@ all_wot = zeros(length(n_choice), 3);
 tic;
 curr_seed=5; bootstraploopTimes = 40; 
 for i=1:length(n_choice)  % This for loop is for fitting
-    n = n_choice(i); h_now = best_h_choices(i);
+    n = n_choice(i); h_now = best_h_values(i);
     
     % Generate TRI first
     rng(22); [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
@@ -425,7 +425,7 @@ end
 
 outloopTimes=50; bootstraploopTimes = 40;
 %% sample size: 3000
-i = 1; n = n_choice(i); h_now = best_h_choices(i);
+i = 1; n = n_choice(i); h_now = best_h_values(i);
 rng(22); 
 [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
  % optimized h value is 0.21 (3rd argument in distmesh2d()
@@ -458,7 +458,7 @@ toc;
 sum(sep_count_TRI1) 
 
 %% sample size: 5000
-i = 2; n = n_choice(i); h_now = best_h_choices(i);
+i = 2; n = n_choice(i); h_now = best_h_values(i);
 rng(22); 
 [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
  % optimized h value is 0.21 (3rd argument in distmesh2d()
@@ -486,7 +486,7 @@ cover_count_TRI2 / outloopTimes
 
 
 %% sample size: 12000
-i = 3; n = n_choice(i); h_now = best_h_choices(i);
+i = 3; n = n_choice(i); h_now = best_h_values(i);
 rng(22); 
 [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
  % optimized h value is 0.21 (3rd argument in distmesh2d()
