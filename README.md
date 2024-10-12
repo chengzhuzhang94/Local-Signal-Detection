@@ -65,7 +65,7 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 
 - calculate estimated zero regions: **211** seconds in total for 4 sample sizes
 
-- Coverage Probability running Time
+- Coverage Probability running time
     1. n=500: **1277** seconds
     2. n=1000: **1473** seconds
     3. n=2000: **2052** seconds
@@ -79,6 +79,13 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 
 - 100 loops to calculate $$P_e$$ and ISE: **3065** seconds in total for 3 sample sizes
 
+- calculate WOT time: 1435 seconds 
+
+- Coverage Probability running time
+    1. n=3000: **4976** seconds
+    2. n=5000: **11836** seconds
+    3. n=12000: **55289** seconds
+  
 ## Poisson Distribution Response Simulation
 
 - we have 3 sample sizes: 500, 2000, 5000
