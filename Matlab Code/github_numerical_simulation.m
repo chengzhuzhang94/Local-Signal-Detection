@@ -716,8 +716,10 @@ summary_coverage_prob = [
     sum(sep_count_TRI4) ./ 100; ...
 ];
 summary_coverage_prob
-%% Appendix --------------------------------------------------------------------------------------------------
-
+% 1.00 0.96 0.99
+% 1.00 0.97 1.00
+% 1.00 0.99 1.00
+% 1.00 0.99 1.00
 
 %% Part V: Performance of different TRI (Optimized, Denser, Sparser, Uniform). We pick sample size n=2000 as example
 tic;
