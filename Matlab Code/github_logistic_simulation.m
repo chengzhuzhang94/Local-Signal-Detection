@@ -85,7 +85,7 @@ for i=1:length(n_choice)
     [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
     disp(['The best h value is ', num2str(h_choice(argmin))])
 end
-[~, argmin] = min(bic_records(:, :), [], 2); h_choice(argmin) % This result is [2.9, 2.9, 2.9] (seed 11)
+[~, argmin] = min(bic_records(:, :), [], 2); h_choice(argmin) % This result is [2.9, 2.9, 2.9] (seed 110)
 toc; % running time: 9 seconds
 
 
@@ -93,7 +93,7 @@ toc; % running time: 9 seconds
 
 kLoopTime = 100; % set up number of loops
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-best_h_values = h_choice(argmin); %its value is [2.9, 2.9, 2.9];
+best_h_values = [2.9, 2.9, 2.9];% because h_choice(argmin) = [2.9, 2.9, 2.9];
 
 tic; 
 curr_seed = 11;
@@ -169,7 +169,7 @@ for i=1:length(n_choice)
     end
    
 end
-toc; 
+toc; % running time 3065 seconds
 
 % Display the mean and median as the Summary Table
 str = zeros(27,1); str = string(str);
@@ -239,7 +239,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
           temp1 = (B(k, :).* 1);temp2 = (B(k, :).* X_1(k,1));temp3 = (B(k, :).* X_2(k,1));
           temp = [temp1, temp2, temp3];mat_Z(k,:) = temp;
       end
-      mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id); %fprintf('Actual training design matrix size: %d * %d\n', size(mat_Z));
+      mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id); 
       [b_hat dev stats] = glmfit(mat_Z, Z, 'binomial', 'link', 'logit', 'constant', 'off'); % Default iteration times is 100
       
       nlam = 14; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.05, 0.7, nlam);
@@ -290,7 +290,6 @@ for i=1:length(n_choice)
     end
 end
 % This code chunk generates Fig - Binary Response Simulation Estimated Zero Regions Dev
-% Different computers might lead to different estimated zero regions even with same seed (103 here)
 
 %% WOT
 all_b_hat = cell(length(n_choice), 1); all_p_b_hat = cell(length(n_choice), 1); 
@@ -424,7 +423,6 @@ end
 
 %% Coverage probability
 
-% set up loop times
 outloopTimes=50; bootstraploopTimes = 40;
 %% sample size: 3000
 i = 1; n = n_choice(i); h_now = best_h_values(i);
@@ -442,6 +440,7 @@ trimesh(TRI, vx, vy);
 for i = 1:nt
     text((vx(v1(i))+vx(v2(i))+vx(v3(i)))./3, (vy(v1(i))+vy(v2(i))+vy(v3(i)))./3, string(i));
 end
+%plot([0 2], [1 1]);
 hold off;
 
 % lower bound region would be those triangles that are entirely contained in true zero region
@@ -455,8 +454,8 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 
 tic;
 [sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR_logistic(100, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes, linspace(0.6, 0.9, 7)) ;
-toc; % running time 4976 seconds
-sum(sep_count_TRI1) 
+toc; 
+sum(sep_count_TRI1) % running time 4976 seconds
 
 %% sample size: 5000
 i = 2; n = n_choice(i); h_now = best_h_values(i);
@@ -513,7 +512,7 @@ sum(sep_count_TRI3) % running time 55289 seconds
 cover_count_TRI3 ./ outloopTimes 
 [mean(width_records_TRI3)./nt; std(width_records_TRI3)]
 
-% display coverage probability
+% display coverage prob.
 summary_coverage_prob = [
     sum(sep_count_TRI1) ./ outloopTimes; ...
     sum(sep_count_TRI2) ./ outloopTimes; ...
