@@ -75,11 +75,11 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 
 ## Binary Distribution Response Simulation
 
-- we have 3 sample sizes: 2000, 5000, 8000
+- we have 3 sample sizes: 2000, 5000, 12000
 
 - 100 loops to calculate $$P_e$$ and ISE: **3065** seconds in total for 3 sample sizes
 
-- calculate WOT time: 1435 seconds 
+- calculate WOT time: **1435** seconds 
 
 - Coverage Probability running time
     1. n=3000: **4976** seconds
@@ -88,7 +88,7 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
   
 ## Poisson Distribution Response Simulation
 
-- we have 3 sample sizes: 500, 2000, 5000
+- we have 3 sample sizes: 1000, 2000, 5000
 
 - 100 loops to calculate $$P_e$$ and ISE: **1472** seconds in total
 
