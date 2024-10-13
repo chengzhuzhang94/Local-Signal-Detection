@@ -85,7 +85,7 @@ for i=1:length(n_choice)
     [~, argmin] = min(bic_records(i, :), [], 2); h_choice(argmin)
     disp(['The best h value is ', num2str(h_choice(argmin))])
 end
-[~, argmin] = min(bic_records(:, :), [], 2); h_choice(argmin) % This result is [2.9, 2.9, 2.9] (seed 11)
+[~, argmin] = min(bic_records(:, :), [], 2); h_choice(argmin) % This result is [2.9, 2.9, 2.9] (seed 110)
 toc; % running time: 9 seconds
 
 
@@ -93,7 +93,7 @@ toc; % running time: 9 seconds
 
 kLoopTime = 100; % set up number of loops
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-best_h_values = [2.9, 2.9, 2.9];
+best_h_values = [2.9, 2.9, 2.9];% because h_choice(argmin) = [2.9, 2.9, 2.9];
 
 tic; 
 curr_seed = 11;
@@ -239,7 +239,7 @@ for i=1:length(n_choice)  % This for loop is for fitting
           temp1 = (B(k, :).* 1);temp2 = (B(k, :).* X_1(k,1));temp3 = (B(k, :).* X_2(k,1));
           temp = [temp1, temp2, temp3];mat_Z(k,:) = temp;
       end
-      mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id); %fprintf('Actual training design matrix size: %d * %d\n', size(mat_Z));
+      mat_Z = mat_Z(valid_id, :); Z = ori_Z(valid_id); 
       [b_hat dev stats] = glmfit(mat_Z, Z, 'binomial', 'link', 'logit', 'constant', 'off'); % Default iteration times is 100
       
       nlam = 14; a = 3.7;threshold = 10 ^ (-3); lam_vec = linspace(0.05, 0.7, nlam);
@@ -455,7 +455,7 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 tic;
 [sep_count_TRI1, cover_count_TRI1, width_records_TRI1, LBM_outloop_TRI1] = CZ_BootstrapCR_logistic(100, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes, linspace(0.6, 0.9, 7)) ;
 toc; 
-sum(sep_count_TRI1) 
+sum(sep_count_TRI1) % running time 4976 seconds
 
 %% sample size: 5000
 i = 2; n = n_choice(i); h_now = best_h_values(i);
@@ -479,7 +479,7 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 tic;
 [sep_count_TRI2, cover_count_TRI2, width_records_TRI2, LBM_outloop_TRI2] = CZ_BootstrapCR_logistic(2, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes, linspace(0.6, 0.9, 7)) ;
 toc; 
-sum(sep_count_TRI2) %
+sum(sep_count_TRI2) % runing time 11837 seconds
 
 cover_count_TRI2 / outloopTimes 
 [mean(width_records_TRI2)./nt; std(width_records_TRI2)]
@@ -507,7 +507,7 @@ m_star_s2 = m_star_sep; m_star_s2{2, 1} = m_star_low;
 tic; 
 [sep_count_TRI3, cover_count_TRI3, width_records_TRI3, LBM_outloop_TRI3] = CZ_BootstrapCR_logistic(2, m_star_sep, m_star_s1, m_star_s2, TRI, pv, n, nc, vx, vy, d, nv, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, 2, outloopTimes, linspace(0.6, 0.9, 7)) ;
 toc; 
-sum(sep_count_TRI3) 
+sum(sep_count_TRI3) % running time 55289 seconds
 
 cover_count_TRI3 ./ outloopTimes 
 [mean(width_records_TRI3)./nt; std(width_records_TRI3)]
