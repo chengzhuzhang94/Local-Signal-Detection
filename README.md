@@ -90,7 +90,7 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 
 - we have 3 sample sizes: 1000, 2000, 5000
 
-- 100 loops to calculate $$P_e$$ and ISE: **1472** seconds in total
+- 100 loops to calculate $$P_e$$ and ISE: **1567** seconds in total
 
 ## Beijing Housing Price Application
 
