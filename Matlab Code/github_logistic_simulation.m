@@ -289,7 +289,10 @@ for i=1:length(n_choice)
     end
 end
 % This code chunk generates Fig - Binary Response Simulation Estimated Zero Regions Dev
-% Different versions of Matlab might lead to different estimated zero regions
+% If you want to re-generate this plot after the entire script running finished, you need to re-run
+% this whole block (line 198 to line 290). Because values of the variable "all_p_b_hat" would be re-assigned in
+% later sections. Alternatively, we add the line below to save the current plot to current directory
+saveas(gcf, 'Fig - Binary Response Simulation Estimated Zero Regions Dev.jpg')
 
 %% WOT
 all_b_hat = cell(length(n_choice), 1); all_p_b_hat = cell(length(n_choice), 1); 
