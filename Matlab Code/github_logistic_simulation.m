@@ -96,7 +96,7 @@ record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3);
 best_h_values = [2.9, 2.9, 2.9];% because h_choice(argmin) = [2.9, 2.9, 2.9];
 
 tic; 
-curr_seed = 11;
+curr_seed = 1000;
 for i=1:length(n_choice)
     n = n_choice(i); h_now = best_h_values(i); 
     rng(22); [p, TRI] = distmesh2d(@dpoly, @huniform, h_now, [-94 28; -70, 40], pv, pv); vx = p(:,1); vy = p(:,2);
