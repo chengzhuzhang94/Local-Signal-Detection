@@ -289,6 +289,7 @@ for i=1:length(n_choice)
     end
 end
 % This code chunk generates Fig - Binary Response Simulation Estimated Zero Regions Dev
+% Different versions of Matlab might lead to different estimated zero regions
 
 %% WOT
 all_b_hat = cell(length(n_choice), 1); all_p_b_hat = cell(length(n_choice), 1); 
