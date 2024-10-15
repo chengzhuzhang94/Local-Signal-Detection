@@ -18,6 +18,13 @@ f1 = @(x,y) 1.* sin(2.*pi./(sqrt(2)-0.5) .* (sqrt((x-1).^2+(y-1).^2)-0.5))+1; f2
 % distmesh2d()
 
 h_opt = 0.13:0.01:0.21;
+
+%% Attention:
+% The code chunk below is used to generate optimized "h" value for each sample size, in which "h" is a
+% parameter used to generate triangulation. We find calling the function "distmesh2d()" with
+% specific "h" values might lead to infinite running on some PC. So, we comment out this process to
+% make sure you can directly run this entire script directly. The code below could be run on our PC
+
 % for j = 1:length(h_opt)
 %     rng(1000); % Set seed to make sure the generated triangulations are identical
 %     h_now = h_opt(j); 
@@ -492,7 +499,7 @@ end
 toc; 
 all_wot
 
-% rng(5), it took 150 seconds to finish
+% rng(5), it took ~150 seconds to finish
 %          0    0.5161    0.7097
 %          0    0.3226    0.4194
 %          0    0.0938    0.3438
