@@ -1,4 +1,10 @@
-%% Numerical Work Part I
+% Guide
+
+% Part I: calculate optimized TRI for each sample size
+% Part II: repeat data generation and fitting to get summary table of P_e and ISE
+% Part III: running time check (only used for README.md)
+
+%% Part I
 m = 3;
 kLoopTime = 100; % alternative value is 300. We repeat estimation multiple times to calculate the SE of ISE & P_e
 
@@ -25,7 +31,7 @@ record_table_ise_scad = zeros(kLoopTime, 1*12);
 record_table_pe = zeros(kLoopTime, 1*12);  
 diag_lamb_vec = zeros(kLoopTime, 1); 
 
-%% Calcualte the Best h values for each sample size: n
+%% Part II: Calcualte the Best h values for each sample size: n
 h_opt = 0.13:0.01:0.23;
 for j = 1:length(h_opt)
     rng(1100); % Set seed to make sure the generated triangulations are identical
@@ -106,8 +112,9 @@ end
 tic; 
 kLoopTime = 100;
 record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
-n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
-curr_seed=1111;
+n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21]; % best_h_values is from above chunk
+
+rng(1111);
 for i=1:length(n_choice)
     
     % Section: generating TRI based on the best h, which was got above
@@ -122,7 +129,6 @@ for i=1:length(n_choice)
         vadj,eadj,adjstart,tadj,tstart,area,TRI] = trilists(vx,vy,TRI);
     nv = length(vx);d = 1;nc = nv + (d-1)*ne + choose(d-1,2)*nt; [grid_B, grid_valid_id] = CZ_SPL_est(grid_S,grid_T,vx,vy,TRI,v1,v2,v3,nt,nc,nv,d);
     
-    rng(curr_seed);
     disp(['The experiment of n:', num2str(n), ' started'])
     for j=1:kLoopTime
         if rem(j, 10) == 1
@@ -255,7 +261,6 @@ summary_T = [string('n') string('F') string('P_e') string('ISE_SCAD') string('IS
     '1000' 'F3' str(19) str(22) str(25);'2000' 'F3' str(20) str(23) str(26);'5000' 'F3' str(21) str(24) str(27);];
 summary_T
 
-
 % Trial Result: rng(1100) (previous default seed)
 %     "n"       "F"     "P_e"                "ISE_SCAD"           "ISE_UNPEN"      
 %     "1000"    "F1"    "0.0502 (0.0765)"    "1.2018 (0.7396)"    "1.1537 (0.5871)"
@@ -268,7 +273,17 @@ summary_T
 %     "2000"    "F3"    "0.1126 (0.1184)"    "0.0761 (0.0943)"    "0.2824 (0.1185)"
 %     "5000"    "F3"    "0.0887 (0.1127)"    "0.0163 (0.0257)"    "0.0965 (0.0377)"
 
-
+% rng(1100): confirmed
+%     "n"       "F"     "P_e"                "ISE_SCAD"           "ISE_UNPEN"      
+%     "1000"    "F1"    "0.0475 (0.0620)"    "1.1420 (0.5575)"    "1.0440 (0.4506)"
+%     "2000"    "F1"    "0.0004 (0.0042)"    "0.4463 (0.1757)"    "0.5192 (0.2255)"
+%     "5000"    "F1"    "0.0000 (0.0000)"    "0.2297 (0.0563)"    "0.2517 (0.0638)"
+%     "1000"    "F2"    "0.2461 (0.0871)"    "0.4409 (0.3284)"    "0.6559 (0.3101)"
+%     "2000"    "F2"    "0.2320 (0.0816)"    "0.1921 (0.1107)"    "0.2816 (0.1345)"
+%     "5000"    "F2"    "0.2527 (0.0673)"    "0.0646 (0.0397)"    "0.0949 (0.0394)"
+%     "1000"    "F3"    "0.1249 (0.1216)"    "0.2777 (0.4213)"    "0.7129 (0.4051)"
+%     "2000"    "F3"    "0.0922 (0.1143)"    "0.0835 (0.1367)"    "0.2929 (0.1429)"
+%     "5000"    "F3"    "0.0765 (0.1037)"    "0.0187 (0.0369)"    "0.0942 (0.0462)"
 %% Time check
 % This section is used to get running time. We use matlab function "tic"
 % and "toc" to get lasping time
@@ -276,7 +291,6 @@ summary_T
 % UNPEN
 
 kLoopTime = 10;
-record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
 n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
 rng(1111);
 for i=1:length(n_choice)
@@ -325,8 +339,6 @@ for i=1:length(n_choice)
 end
 
 % SCAD Tuning and One rep
-kLoopTime = 10;
-record_table = zeros(kLoopTime, 3*9);  diag_lamb_vec = zeros(kLoopTime, 3); 
 n_choice = [1000, 2000, 5000]; best_h_values = [0.21, 0.21, 0.21];
 rng(1111);
 for i=1:length(n_choice)
