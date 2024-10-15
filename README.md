@@ -66,10 +66,10 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 - calculate estimated zero regions: **211** seconds in total for 4 sample sizes
 
 - Coverage Probability running time
-    1. n=500: **1277** seconds
-    2. n=1000: **1473** seconds
-    3. n=2000: **2052** seconds
-    4. n=5000: **9016** seconds
+    1. n=500: **1467** seconds
+    2. n=1000: **1910** seconds
+    3. n=2000: **2764** seconds
+    4. n=5000: **10587** seconds
 
 - Performance comparison for different Triangulations when n=2000: **193** seconds in total for 4 different types of Triangulations
 
