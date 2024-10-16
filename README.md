@@ -75,7 +75,7 @@ The script `github_BJ_ver_2.m` generates: `Fig - BJ TRI and District.jpg` and `F
 
 ## Binary Distribution Response Simulation
 
-- we have 3 sample sizes: 2000, 5000, 12000
+- we have 3 sample sizes: 3000, 5000, 12000
 
 - 100 loops to calculate $$P_e$$ and ISE: **3065** seconds in total for 3 sample sizes
 
