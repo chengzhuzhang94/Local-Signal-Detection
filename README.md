@@ -4,7 +4,7 @@
 
 ## Abstract
 
-In spatial analysis, it is essential to understand and quantify spatial or temporal hetero-geneity. This paper focuses on the generalized spatially varying coefficient model (GSVCM),
+In spatial analysis, it is essential to understand and quantify spatial or temporal heterogeneity. This paper focuses on the generalized spatially varying coefficient model (GSVCM),
 a powerful framework to accommodate spatial heterogeneity by allowing regression coefficients to vary in a given spatial domain. We propose a penalized bivariate spline method
 for detecting local signals in GSVCM. The key idea is to use bivariate splines defined on
 triangulation to approximate nonparametric varying coefficient functions and impose a local
