@@ -4,17 +4,14 @@
 
 ## Abstract
 
-In spatial analysis, it is essential to understand and quantify spatial or temporal hetero-
-geneity. This paper focuses on the generalized spatially varying coefficient model (GSVCM),
-a powerful framework to accommodate spatial heterogeneity by allowing regression coeffi-
-cients to vary in a given spatial domain. We propose a penalized bivariate spline method
+In spatial analysis, it is essential to understand and quantify spatial or temporal hetero-geneity. This paper focuses on the generalized spatially varying coefficient model (GSVCM),
+a powerful framework to accommodate spatial heterogeneity by allowing regression coefficients to vary in a given spatial domain. We propose a penalized bivariate spline method
 for detecting local signals in GSVCM. The key idea is to use bivariate splines defined on
 triangulation to approximate nonparametric varying coefficient functions and impose a local
 penalty on L2 norms of spline coefficients for each triangle to identify null regions of zero
 effects. Moreover, we develop model confidence regions as the inference tool to quantify the
 uncertainty of the estimated null regions. Our method partitions the region of interest using
-triangulation and efficiently approximates irregular domains. In addition, we propose an ef-
-ficient algorithm to obtain the proposed estimator using the local quadratic approximation.
+triangulation and efficiently approximates irregular domains. In addition, we propose an efficient algorithm to obtain the proposed estimator using the local quadratic approximation.
 We also establish the consistency of estimated nonparametric coefficient functions and the
 estimated null regions. The numerical performance of the proposed method is evaluated in
 both simulation cases and real data analysis.
