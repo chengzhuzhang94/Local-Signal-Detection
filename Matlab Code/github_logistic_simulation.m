@@ -362,8 +362,9 @@ for i=1:length(n_choice)  % This for loop is for fitting
       
     all_p_b_hat{i,1} = p_b_hat;
     disp(['The Bootstrap part of n:', num2str(n), ' started!'])
+    % Generate Bootstrap resample data points
     [records, lambda_records] = CZ_bootstrap_logic_nested(2, TRI, pv, vx, vy, n, mat_Z, Z, b_hat, p_b_hat, nt, nc, nv, d, v1, v2, v3, e1, e2, e3, ie1, m, bootstraploopTimes, 1, 0, lam_vec(temp_index), linspace(0.6, 0.9, 7));
-    
+    % Use records of TRI number of each loop to calculate MCR
     MCB_records = cell(size(records,1)+1, 2*m); CR_records = zeros(size(records,2)/m+1, m);
     for j = 1:m
        TRI_no = 1+(j-1)*nt:j*nt; [out, pi_idx] = sort(sum(records(:, TRI_no), 1), 'descend');
@@ -443,7 +444,6 @@ trimesh(TRI, vx, vy);
 for i = 1:nt
     text((vx(v1(i))+vx(v2(i))+vx(v3(i)))./3, (vy(v1(i))+vy(v2(i))+vy(v3(i)))./3, string(i));
 end
-%plot([0 2], [1 1]);
 hold off;
 
 % lower bound region would be those triangles that are entirely contained in true zero region
