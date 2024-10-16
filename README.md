@@ -41,7 +41,7 @@ We found that if we use different versions of Matlab (e.g., R2022b, R2023a), the
 
 All Matlab code files and plots are stored at two folders: "**Matlab Code**" and "**Visualization**". They contain matlab code scripts and associated plots respectively. Under the folder "**Matlab Code**", we have following main scripts that start with the prefix "github_"
 
-- The file `github_numerical_simulation` is for simulation code for the case when the response variable is continuous.
+- The file `github_numerical_simulation.m` is for simulation code for the case when the response variable is continuous.
 
 - The file `github_logistic_simulation.m` is for the case when the response variable follows a Bernoulli distribution.
 
